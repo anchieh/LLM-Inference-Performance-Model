@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>LLM Inference Perf Model v4.0</title>
+<title>LLM Inference Perf Model v5.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -28,21 +28,82 @@ html,body{min-height:100vh;background:var(--bg0);color:var(--text);font-family:v
 .topbar .sub{font-size:12px;color:var(--text3);font-family:var(--mono)}
 .topbar .v{font-size:12px;font-family:var(--mono);border:0.5px solid var(--amber2);color:var(--amber);padding:2px 9px;border-radius:3px}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.lang-btn{font-family:var(--mono);font-size:12px;padding:4px 14px;background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);cursor:pointer;transition:all .15s;line-height:1.6}
-.lang-btn:first-child{border-radius:3px 0 0 3px}
-.lang-btn:nth-child(2){border-radius:0 3px 3px 0;border-left:none}
-.lang-btn.on{background:var(--amber3);border-color:var(--amber2);color:var(--amber);font-weight:500}
-.dl-btn{font-family:var(--mono);font-size:12px;padding:4px 14px;background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);cursor:pointer;border-radius:3px;transition:all .15s}
-.dl-btn:hover{background:var(--bg4);color:var(--text)}
+.tb-btn{font-family:var(--mono);font-size:12px;padding:4px 14px;background:var(--bg3);border:0.5px solid var(--border2);color:var(--text2);cursor:pointer;transition:all .15s;line-height:1.6}
+.tb-btn:hover{background:var(--bg4);color:var(--text)}
+.tb-btn.on{background:var(--amber3);border-color:var(--amber2);color:var(--amber);font-weight:500}
+.tb-group{display:flex}
+.tb-group .tb-btn:first-child{border-radius:3px 0 0 3px}
+.tb-group .tb-btn:last-child{border-radius:0 3px 3px 0;border-left:none}
+.tb-single{border-radius:3px}
 
-/* layout */
+/* wizard */
+.wiz{max-width:1180px;margin:0 auto;padding:26px 28px 10px}
+.wiz-steps{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.wiz-card{background:var(--bg1);border:0.5px solid var(--border2);border-radius:8px;padding:16px 18px}
+.wiz-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--amber3);border:0.5px solid var(--amber2);color:var(--amber);font-family:var(--mono);font-size:12px;font-weight:500;margin-right:8px}
+.wiz-title{font-size:13px;font-weight:500;margin-bottom:12px;display:flex;align-items:center}
+.wiz-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.wiz-row:last-child{margin-bottom:0}
+.wiz-lbl{font-size:12px;color:var(--text3);width:74px;flex-shrink:0}
+select{background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 8px;border-radius:4px;outline:none;cursor:pointer;flex:1;min-width:0}
+select:hover{border-color:var(--amber2)}
+select option,select optgroup{background:var(--bg2)}
+.num-in{background:var(--bg3);border:0.5px solid var(--border2);color:var(--amber);font-family:var(--mono);font-size:12px;padding:6px 8px;border-radius:4px;outline:none;width:86px;text-align:right}
+.pills{display:flex;flex-wrap:wrap;gap:4px}
+.pill{padding:5px 9px;border-radius:3px;border:0.5px solid var(--border2);background:var(--bg3);font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap}
+.pill:hover{background:var(--bg4);color:var(--text)}
+.pill.on{border-color:var(--amber2);background:var(--amber3);color:var(--amber)}
+.spec-hint{font-size:12px;color:var(--text3);font-family:var(--mono);margin-top:6px;line-height:1.6}
+
+/* result cards */
+.res-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+.dev-card{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:12px 13px;position:relative}
+.dev-card.dis{opacity:0.35}
+.dev-head{display:flex;align-items:baseline;gap:7px;margin-bottom:8px;padding-bottom:8px;border-bottom:0.5px solid var(--border)}
+.dev-name{font-size:13px;font-weight:500}
+.dev-hint{font-size:12px;color:var(--text3)}
+.dev-verdict{font-size:15px;margin-left:auto}
+.dev-tps{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--amber);line-height:1}
+.dev-unit{font-size:12px;color:var(--text2)}
+.dev-result{display:flex;align-items:baseline;gap:5px;margin-bottom:10px}
+.dev-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--text2);margin-top:5px}
+.dev-val{font-family:var(--mono);font-size:12px;color:var(--text);font-weight:500}
+.dev-na{font-size:12px;color:var(--text3);padding:14px 0;text-align:center;line-height:1.7}
+.badges{margin-top:9px;padding-top:8px;border-top:0.5px solid var(--border);display:flex;gap:4px;flex-wrap:wrap}
+.badge{display:inline-block;font-family:var(--mono);font-size:12px;padding:1px 7px;border-radius:3px;border:0.5px solid var(--border2);color:var(--text3)}
+.badge.cal{border-color:var(--teal2);color:var(--teal);background:var(--teal3)}
+.badge.est{border-color:var(--purple2);color:var(--purple);background:var(--purple3)}
+.badge.ok{border-color:var(--teal2);color:var(--teal)}
+.badge.exp{border-color:var(--amber2);color:var(--amber)}
+.vtag{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:500;padding:2px 7px;border-radius:3px}
+.vg{background:var(--teal3);color:var(--teal);border:0.5px solid var(--teal2)}
+.vw{background:var(--amber3);color:var(--amber);border:0.5px solid var(--amber2)}
+.vb{background:var(--red3);color:var(--red);border:0.5px solid var(--red2)}
+
+.ram-bar{background:var(--bg1);border:0.5px solid var(--border2);border-radius:6px;padding:11px 16px;display:flex;gap:26px;align-items:baseline;flex-wrap:wrap;margin-bottom:10px}
+.ram-item{display:flex;gap:8px;align-items:baseline}
+.ram-lbl{font-size:12px;color:var(--text3)}
+.ram-val{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--teal)}
+.ram-val.warn{color:var(--red)}
+.warnbar{font-family:var(--mono);font-size:12px;padding:7px 12px;border-radius:4px;line-height:1.55;background:var(--red3);color:var(--red);border:0.5px solid var(--red2);margin-bottom:10px}
+.warnbar:empty{display:none}
+
+/* compare */
+.cmp-head{display:flex;align-items:center;gap:10px;margin:4px 0 10px}
+.cmp-title{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);font-weight:500;white-space:nowrap}
+.cmp-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:14px}
+.cmp-table th{text-align:left;font-size:12px;color:var(--text3);font-weight:500;padding:5px 10px 5px 0;border-bottom:0.5px solid var(--border2);text-transform:uppercase;letter-spacing:.05em}
+.cmp-table td{padding:6px 10px 6px 0;border-bottom:0.5px solid var(--border);font-family:var(--mono)}
+.cmp-table td.k{font-family:var(--sans);color:var(--text2)}
+.cmp-diff{color:var(--teal)}
+.cmp-diff.neg{color:var(--red)}
+
+/* advanced layout */
 .main-grid{display:grid;grid-template-columns:300px 1fr;border-bottom:0.5px solid var(--border)}
 .col{padding:22px;border-right:0.5px solid var(--border)}
 .col:last-child{border-right:none}
 .sh{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding-bottom:7px;border-bottom:0.5px solid var(--border);margin-bottom:13px;font-weight:500}
 .divider{border:none;border-top:0.5px solid var(--border);margin:16px 0}
-
-/* sliders */
 .sb{margin-bottom:13px}
 .sb-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
 .sb-name{font-size:13px;color:var(--text2)}
@@ -52,79 +113,11 @@ html,body{min-height:100vh;background:var(--bg0);color:var(--text);font-family:v
 .sb-edit{font-family:var(--mono);font-size:15px;color:var(--amber);font-weight:500;background:var(--amber3);border:0.5px solid var(--amber2);border-radius:3px;outline:none;padding:1px 5px;width:80px;text-align:right}
 input[type=range]{width:100%;height:3px;-webkit-appearance:none;background:var(--bg4);border-radius:2px;outline:none;cursor:pointer}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--amber);border:2px solid var(--bg1);cursor:pointer}
-
-/* Q pills — inline sub */
 .pill-label{font-size:12px;color:var(--text3);margin-bottom:6px;margin-top:12px;letter-spacing:.05em;text-transform:uppercase}
-.pills{display:flex;flex-wrap:wrap;gap:4px}
-.pill{padding:5px 9px;border-radius:3px;border:0.5px solid var(--border2);background:var(--bg3);font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap}
-.pill:hover{background:var(--bg4);color:var(--text)}
-.pill.on{border-color:var(--amber2);background:var(--amber3);color:var(--amber)}
-.pill-si{font-size:12px;font-weight:400;color:var(--text3);margin-left:5px}
-.pill.on .pill-si{color:var(--amber2)}
-
-/* Runtime mode — full-width definition list */
-.mode-list{display:flex;flex-direction:column;gap:3px;margin-bottom:4px}
-.mode-item{display:flex;align-items:baseline;gap:0;padding:7px 10px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:4px;cursor:pointer;transition:all .12s}
-.mode-item:hover{background:var(--bg4)}
-.mode-item.on{background:var(--amber3);border-color:var(--amber2)}
-.mode-name{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text);width:62px;flex-shrink:0}
-.mode-item.on .mode-name{color:var(--amber)}
-.mode-sep{color:var(--border2);margin:0 8px;flex-shrink:0}
-.mode-item.on .mode-sep{color:var(--amber2)}
-.mode-desc{font-size:12px;color:var(--text3);line-height:1.4}
-.mode-item.on .mode-desc{color:var(--amber2)}
-
-/* Batch pills — inline */
-.batch-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
-.bpill{padding:6px 8px;border-radius:3px;border:0.5px solid var(--border2);background:var(--bg3);cursor:pointer;transition:all .12s;text-align:left}
-.bpill:hover{background:var(--bg4)}
-.bpill.on{border-color:var(--amber2);background:var(--amber3)}
-.bpill-name{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text2);display:block}
-.bpill.on .bpill-name{color:var(--amber)}
-.bpill-desc{font-size:12px;color:var(--text3);display:block;margin-top:2px}
-.bpill.on .bpill-desc{color:var(--amber2)}
-
-/* SIMD */
 .seg{display:flex;border:0.5px solid var(--border2);border-radius:4px;overflow:hidden}
 .seg button{flex:1;padding:5px 10px;background:var(--bg3);border:none;color:var(--text2);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .12s}
 .seg button.on{background:var(--amber3);color:var(--amber);font-weight:500}
 .seg button+button{border-left:0.5px solid var(--border2)}
-
-/* presets */
-.preset{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--bg2);border:0.5px solid var(--border);border-radius:4px;cursor:pointer;margin-bottom:3px;transition:all .12s;overflow:hidden}
-.preset:hover{background:var(--bg3);border-color:var(--border2)}
-.pname{font-size:12px;color:var(--text);flex-shrink:0;white-space:nowrap}
-.ptag{font-size:12px;color:var(--text3);font-family:var(--mono);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.pspec{display:none}
-.pbw{font-family:var(--mono);font-size:12px;color:var(--amber);flex-shrink:0;white-space:nowrap}
-
-/* device cards */
-.dev-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px}
-.dev-card{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:12px 13px}
-.dev-card.dis{opacity:0.28}
-.dev-head{display:flex;align-items:baseline;gap:7px;margin-bottom:8px;padding-bottom:8px;border-bottom:0.5px solid var(--border)}
-.dev-name{font-size:13px;font-weight:500}
-.dev-hint{font-size:12px;color:var(--text3)}
-.dev-result{display:flex;align-items:baseline;gap:5px;margin-bottom:10px}
-.dev-tps{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--amber);line-height:1}
-.dev-unit{font-size:12px;color:var(--text2)}
-.dev-na{font-size:12px;color:var(--text3);padding:18px 0;text-align:center}
-.dev-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--text2);margin-top:5px}
-.dev-val{font-family:var(--mono);font-size:12px;color:var(--text);font-weight:500}
-.dev-bpt{margin-top:8px;padding-top:6px;border-top:0.5px solid var(--border)}
-.dev-bpt-row{display:flex;align-items:baseline;gap:6px;margin-top:4px}
-.dev-bpt-lbl{font-size:12px;color:var(--text3);width:48px;flex-shrink:0}
-.dev-bpt-val{font-family:var(--mono);font-size:12px;font-weight:500}
-.dev-ai{margin-top:8px;padding-top:6px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:baseline}
-.dev-ai-lbl{font-size:12px;color:var(--text2)}
-.dev-ai-val{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--teal)}
-
-.vtag{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:500;padding:2px 7px;border-radius:3px}
-.vg{background:var(--teal3);color:var(--teal);border:0.5px solid var(--teal2)}
-.vw{background:var(--amber3);color:var(--amber);border:0.5px solid var(--amber2)}
-.vb{background:var(--red3);color:var(--red);border:0.5px solid var(--red2)}
-
-/* core adequacy */
 .adequacy{background:var(--bg2);border:0.5px solid var(--border);border-radius:6px;padding:13px 15px;margin-bottom:13px}
 .adeq-row{display:flex;align-items:center;margin-bottom:6px}
 .adeq-label{font-size:12px;color:var(--text2);width:68px;flex-shrink:0}
@@ -132,50 +125,21 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .adeq-fill{height:100%;border-radius:3px;transition:width .4s}
 .adeq-val{font-family:var(--mono);font-size:13px;font-weight:500;width:40px;text-align:right}
 .adeq-verdict{font-size:12px;color:var(--text2);margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border);line-height:1.6}
-
-/* result mini cards */
-.rg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px}
-.rc{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:12px 14px}
-.rc-label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
-.rc-val{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1;margin-bottom:3px}
-.rc-unit{font-size:12px;color:var(--text2)}
-.rc-detail{font-family:var(--mono);font-size:12px;color:var(--text3);margin-top:8px;line-height:1.7}
-.vtag-sm{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:500;padding:2px 7px;border-radius:3px;margin-top:6px}
-
-/* eta */
-.eta-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
-.eta-item{background:var(--bg2);border:0.5px solid var(--border2);border-radius:4px;padding:8px 10px}
-.eta-name{font-size:12px;color:var(--text2);margin-bottom:3px}
-.eta-val{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--text)}
-.eta-total{background:var(--bg3);border:0.5px solid var(--border2);border-radius:4px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
-.eta-total-label{font-size:12px;color:var(--text2)}
-.eta-total-val{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--amber)}
-
-/* rec */
 .rec{background:var(--bg2);border-radius:6px;border:0.5px solid var(--border2);padding:13px 15px}
 .rec h3{font-size:13px;font-weight:500;color:var(--text);margin-bottom:10px}
 .rec-item{display:flex;gap:8px;margin-bottom:7px;font-size:12px;color:var(--text2);line-height:1.55}
 .rec-item:last-child{margin-bottom:0}
 .rec-arrow{color:var(--teal);font-weight:500;flex-shrink:0}
 
-/* warnbar */
-.warnbar{font-family:var(--mono);font-size:12px;padding:7px 12px;border-radius:4px;line-height:1.55;background:var(--amber3);color:var(--amber);border:0.5px solid var(--amber2);margin-bottom:13px}
-.warnbar:empty{display:none}
-
-/* bottom */
-.bottom{padding:24px 28px 0}
-
-/* param table */
+/* bottom shared */
+.bottom{padding:24px 28px 0;max-width:1180px;margin:0 auto}
 .param-table{width:100%;border-collapse:collapse;font-size:12px}
 .param-table th{text-align:left;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);padding:6px 12px 6px 0;border-bottom:0.5px solid var(--border2)}
 .param-table td{padding:6px 12px 6px 0;border-bottom:0.5px solid var(--border);vertical-align:middle}
 .param-table tr:last-child td{border-bottom:none}
-.param-table td.sym{font-family:var(--mono);font-size:12px;color:var(--amber);white-space:nowrap;width:140px}
+.param-table td.sym{font-family:var(--mono);font-size:12px;color:var(--amber);white-space:nowrap;width:150px}
 .param-table td.def{font-size:12px;color:var(--text);width:auto}
 .param-table td.dflt{font-family:var(--mono);font-size:12px;color:var(--text2);white-space:nowrap}
-.pnew{font-size:12px;background:rgba(40,184,128,.15);color:var(--teal);border:0.5px solid var(--teal2);border-radius:2px;padding:0 5px;margin-left:5px;vertical-align:middle}
-
-/* theory */
 .theory-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
 .theory{background:var(--bg2);border:0.5px solid var(--border2);border-radius:6px;padding:14px 16px}
 .theory.span3{grid-column:1/-1}
@@ -184,111 +148,132 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .theory p:last-child{margin-bottom:0}
 .eq{display:block;font-family:var(--mono);font-size:12px;background:var(--bg3);padding:7px 10px;border-radius:4px;margin:8px 0;color:var(--blue);line-height:1.7}
 .eq .hi{color:var(--amber)}
-.eq .dim{color:var(--text3)}
 .mini-t{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
 .mini-t th{color:var(--text3);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:4px 6px 4px 0;border-bottom:0.5px solid var(--border);font-weight:500;text-align:left}
 .mini-t td{padding:5px 6px 5px 0;color:var(--text2);border-bottom:0.5px solid var(--border);vertical-align:middle}
 .mini-t tr:last-child td{border-bottom:none}
 .mini-t td.k{color:var(--text);font-family:var(--mono)}
 .num{color:var(--amber)}
+@media(max-width:900px){.res-grid{grid-template-columns:1fr 1fr}.wiz-steps{grid-template-columns:1fr}.theory-grid{grid-template-columns:1fr}.main-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <h1>LLM Inference Performance Model</h1>
-  <span class="sub" data-i18n="topbar-sub">BW + Compute 雙瓶頸 · Heterogeneous · AI Streams</span>
+  <span class="sub" data-i18n="topbar-sub">CPU · iGPU · NPU · dGPU 統一估算</span>
   <div class="topbar-right">
-    <button id="btn-zh" class="lang-btn on" onclick="setLang('zh')">中</button><button id="btn-en" class="lang-btn" onclick="setLang('en')">EN</button>
-    <button class="dl-btn" onclick="downloadReport()" data-i18n="download-btn">↓ 下載報告</button>
-    <span class="v">v4.0 · RD Spec</span>
+    <div class="tb-group">
+      <button id="btn-wiz" class="tb-btn on" onclick="setLayer('wiz')" data-i18n="layer-wiz">精靈</button><button id="btn-adv" class="tb-btn" onclick="setLayer('adv')" data-i18n="layer-adv">進階</button>
+    </div>
+    <div class="tb-group">
+      <button id="btn-zh" class="tb-btn on" onclick="setLang('zh')">中</button><button id="btn-en" class="tb-btn" onclick="setLang('en')">EN</button>
+    </div>
+    <button class="tb-btn tb-single" onclick="downloadReport()" data-i18n="download-btn">↓ 下載報告</button>
+    <span class="v">v5.0</span>
   </div>
 </div>
 
-<div class="main-grid">
+<!-- ============ WIZARD LAYER ============ -->
+<div id="view-wiz" class="wiz">
+  <div class="wiz-steps">
+    <div class="wiz-card">
+      <div class="wiz-title"><span class="wiz-num">1</span><span data-i18n="wz-s1">選機器</span></div>
+      <div class="wiz-row">
+        <span class="wiz-lbl" data-i18n="wz-platform">平台</span>
+        <select id="selPlat" onchange="onPlat()"></select>
+      </div>
+      <div id="customRow" style="display:none">
+        <div class="wiz-row">
+          <span class="wiz-lbl">BW GB/s</span><input class="num-in" id="cBW" type="number" value="102.4" step="0.1" oninput="calc()">
+          <span class="wiz-lbl" style="width:auto">Cores</span><input class="num-in" id="cC" type="number" value="16" step="1" oninput="calc()">
+        </div>
+        <div class="wiz-row">
+          <span class="wiz-lbl" data-i18n="wz-igpu-u">iGPU util</span><input class="num-in" id="cUI" type="number" value="0.65" step="0.05" min="0" max="0.95" oninput="calc()">
+          <span class="wiz-lbl" style="width:auto" data-i18n="wz-npu-u">NPU util</span><input class="num-in" id="cUN" type="number" value="0" step="0.05" min="0" max="0.95" oninput="calc()">
+        </div>
+      </div>
+      <div class="wiz-row">
+        <span class="wiz-lbl">+ dGPU</span>
+        <select id="selGpu" onchange="curGpuId=this.value;calc()"></select>
+      </div>
+      <div class="spec-hint" id="platHint"></div>
+    </div>
+    <div class="wiz-card">
+      <div class="wiz-title"><span class="wiz-num">2</span><span data-i18n="wz-s2">選模型</span></div>
+      <div class="wiz-row">
+        <span class="wiz-lbl" data-i18n="wz-model">模型</span>
+        <select id="selModel" onchange="onModel()"></select>
+        <input class="num-in" id="cP" type="number" value="8" step="0.5" min="0.5" style="display:none" oninput="calc()">
+      </div>
+      <div class="pill-label" data-i18n="q-label">量化格式</div>
+      <div class="pills" id="qpills"></div>
+      <div class="pill-label" data-i18n="l-label">上下文長度 L</div>
+      <div class="pills" id="lpills"></div>
+      <div class="spec-hint" id="modelHint"></div>
+    </div>
+  </div>
 
-<!-- LEFT -->
+  <div class="warnbar" id="wizWarn"></div>
+  <div class="res-grid" id="wizCards"></div>
+  <div class="ram-bar" id="ramBar"></div>
+
+  <div class="cmp-head">
+    <span class="cmp-title" data-i18n="cmp-title">對比第二台</span>
+    <select id="selPlat2" onchange="curPlat2Id=this.value;calc()" style="max-width:340px"></select>
+  </div>
+  <div id="cmpZone"></div>
+</div>
+
+<!-- ============ ADVANCED LAYER ============ -->
+<div id="view-adv" style="display:none">
+<div class="main-grid">
 <div class="col">
   <div class="sh" data-i18n="sh-model">模型與量化</div>
-
   <div class="sb">
     <div class="sb-top">
       <span class="sb-name" data-i18n="lbl-P">模型參數 P</span>
-      <span class="sb-val" id="vP" data-slider="sP" data-unit="B" data-raw="14" onclick="startEdit(this)">14 B</span>
+      <span class="sb-val" id="vP" data-slider="sP" data-unit="B" data-raw="8" onclick="startEdit(this)">8 B</span>
     </div>
-    <input type="range" id="sP" min="1" max="235" value="14" step="1" oninput="calc()">
+    <input type="range" id="sP" min="0.5" max="235" value="8" step="0.5" oninput="calc()">
   </div>
-
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;margin-top:-4px">
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2)">
       <input type="checkbox" id="moeCheck" onchange="toggleMoE()" style="width:13px;height:13px;accent-color:var(--amber);cursor:pointer">
       <span data-i18n="moe-label">MoE 模式</span>
     </label>
-    <div id="moeActive" style="display:none;flex:1;display:none;align-items:center;gap:8px">
+    <div id="moeActive" style="display:none;flex:1;align-items:center;gap:8px">
       <span style="font-size:12px;color:var(--text2)" data-i18n="moe-active-lbl">Active P</span>
-      <span class="sb-val" id="vAP" data-slider="sAP" data-unit="B" data-raw="3.8" onclick="startEdit(this)" style="font-size:13px">3.8 B</span>
-      <input type="range" id="sAP" min="0.5" max="100" value="3.8" step="0.1" oninput="calc()" style="flex:1">
+      <span class="sb-val" id="vAP" data-slider="sAP" data-unit="B" data-raw="3.6" onclick="startEdit(this)" style="font-size:13px">3.6 B</span>
+      <input type="range" id="sAP" min="0.5" max="100" value="3.6" step="0.1" oninput="calc()" style="flex:1">
     </div>
   </div>
-
-  <div class="pill-label" data-i18n="q-label">量化格式 Q</div>
-  <div class="pills" id="qpills">
-    <div class="pill" data-q="0.250" data-ql="Q2_K" onclick="selQ(this)">Q2_K<span class="pill-si">int2 · 2.25b</span></div>
-    <div class="pill" data-q="0.375" data-ql="Q3_K_M" onclick="selQ(this)">Q3_K_M<span class="pill-si">int3 · 3.35b</span></div>
-    <div class="pill on" data-q="0.5625" data-ql="Q4_K_M" onclick="selQ(this)">Q4_K_M ★<span class="pill-si">int4 · 4.5b</span></div>
-    <div class="pill" data-q="0.500" data-ql="Q4_0" onclick="selQ(this)">Q4_0<span class="pill-si">int4 · 4.0b</span></div>
-    <div class="pill" data-q="0.625" data-ql="Q5_K_M" onclick="selQ(this)">Q5_K_M<span class="pill-si">int5 · 5.5b</span></div>
-    <div class="pill" data-q="1.000" data-ql="Q8_0" onclick="selQ(this)">Q8_0<span class="pill-si">char · 8b</span></div>
-    <div class="pill" data-q="2.000" data-ql="FP16" onclick="selQ(this)">FP16<span class="pill-si">fp16 · 16b</span></div>
-  </div>
-
-  <div class="divider"></div>
-  <div class="sh" data-i18n="sh-mode">推論模式</div>
-  <div class="mode-list" id="mode-list">
-    <div class="mode-item on" data-m="decode" onclick="selMode(this)">
-      <span class="mode-name">Decode</span><span class="mode-sep">·</span><span class="mode-desc" data-i18n="mode-decode-desc">每次輸出一個字，是 LLM 最常見的工作狀態</span>
+  <div class="pill-label" data-i18n="q-label">量化格式</div>
+  <div class="pills" id="qpillsAdv"></div>
+  <div class="sb" style="margin-top:13px">
+    <div class="sb-top">
+      <span class="sb-name" data-i18n="lbl-L">上下文長度 L（tokens）</span>
+      <span class="sb-val" id="vL" data-slider="sL" data-unit="" data-raw="4096" onclick="startEdit(this)">4,096</span>
     </div>
-    <div class="mode-item" data-m="prefill" onclick="selMode(this)">
-      <span class="mode-name">Prefill</span><span class="mode-sep">·</span><span class="mode-desc" data-i18n="mode-prefill-desc">一次讀完整段輸入，計算密集，影響首次回應時間</span>
-    </div>
-    <div class="mode-item" data-m="hybrid" onclick="selMode(this)">
-      <span class="mode-name">Hybrid</span><span class="mode-sep">·</span><span class="mode-desc" data-i18n="mode-hybrid-desc">讀取與輸出交替，長對話的典型模式</span>
-    </div>
+    <input type="range" id="sL" min="512" max="65536" value="4096" step="512" oninput="calc()">
   </div>
 
   <div class="divider"></div>
-  <div class="sh" data-i18n="sh-batch">批次大小</div>
-  <div class="batch-pills" id="batch-pills">
-    <div class="bpill on" data-b="b1" onclick="selBatch(this)">
-      <span class="bpill-name">B = 1</span>
-      <span class="bpill-desc" data-i18n="batch-b1-desc">單一對話</span>
-    </div>
-    <div class="bpill" data-b="b4" onclick="selBatch(this)">
-      <span class="bpill-name">B = 4</span>
-      <span class="bpill-desc" data-i18n="batch-b4-desc">4 路並行</span>
-    </div>
-    <div class="bpill" data-b="b8" onclick="selBatch(this)">
-      <span class="bpill-name">B = 8</span>
-      <span class="bpill-desc" data-i18n="batch-b8-desc">8 路並行</span>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-  <div class="sh" data-i18n="sh-cpu">CPU 規格</div>
+  <div class="sh" data-i18n="sh-hw">硬體參數</div>
   <div class="sb">
     <div class="sb-top">
       <span class="sb-name" data-i18n="lbl-BW">記憶體頻寬 BW</span>
-      <span class="sb-val" id="vBW" data-slider="sBW" data-unit="GB/s" data-raw="89.6" onclick="startEdit(this)">89.6 GB/s</span>
+      <span class="sb-val" id="vBW" data-slider="sBW" data-unit="GB/s" data-raw="102.4" onclick="startEdit(this)">102.4 GB/s</span>
     </div>
-    <input type="range" id="sBW" min="10" max="700" value="89.6" step="0.1" oninput="calc()">
-    <div data-i18n="bw-hint" style="font-size:12px;color:var(--text3);margin-top:4px">不確定？選上方平台預設即可</div>
+    <input type="range" id="sBW" min="10" max="700" value="102.4" step="0.1" oninput="calc()">
+    <div data-i18n="bw-hint" style="font-size:12px;color:var(--text3);margin-top:4px">選平台自動帶入，手動調整視為自訂</div>
   </div>
   <div class="sb">
     <div class="sb-top">
-      <span class="sb-name" data-i18n="lbl-C">Core 數 C（CPU 核心數）</span>
-      <span class="sb-val" id="vC" data-slider="sC" data-unit="" data-raw="24" onclick="startEdit(this)">24</span>
+      <span class="sb-name" data-i18n="lbl-C">CPU 核心數 C</span>
+      <span class="sb-val" id="vC" data-slider="sC" data-unit="" data-raw="16" onclick="startEdit(this)">16</span>
     </div>
-    <input type="range" id="sC" min="1" max="256" value="24" step="1" oninput="calc()">
+    <input type="range" id="sC" min="1" max="256" value="16" step="1" oninput="calc()">
   </div>
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:13px">
     <span class="sb-name" style="flex:1" data-i18n="lbl-simd">SIMD 能力</span>
@@ -299,21 +284,24 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   </div>
   <div class="sb">
     <div class="sb-top">
-      <span class="sb-name" data-i18n="lbl-L">輸入長度 L（tokens）</span>
-      <span class="sb-val" id="vL" data-slider="sL" data-unit="" data-raw="512" onclick="startEdit(this)">512</span>
+      <span class="sb-name" data-i18n="lbl-uI">iGPU 利用率 util</span>
+      <span class="sb-val" id="vUI" data-slider="sUI" data-unit="" data-raw="0.67" onclick="startEdit(this)">0.67</span>
     </div>
-    <input type="range" id="sL" min="64" max="8192" value="512" step="64" oninput="calc()">
+    <input type="range" id="sUI" min="0" max="0.95" value="0.67" step="0.01" oninput="calc()">
   </div>
-
-  <div class="divider"></div>
-  <div class="sh" data-i18n="sh-preset">平台預設</div>
-  <div id="presets"></div>
+  <div class="sb">
+    <div class="sb-top">
+      <span class="sb-name" data-i18n="lbl-uN">NPU 利用率 util</span>
+      <span class="sb-val" id="vUN" data-slider="sUN" data-unit="" data-raw="0.38" onclick="startEdit(this)">0.38</span>
+    </div>
+    <input type="range" id="sUN" min="0" max="0.95" value="0.38" step="0.01" oninput="calc()">
+  </div>
 </div>
 
-<!-- RIGHT -->
 <div class="col">
   <div class="sh" data-i18n="sh-parallel">並行裝置估算</div>
-  <div class="dev-grid" id="dev-cards"></div>
+  <div class="res-grid" id="advCards"></div>
+  <div class="ram-bar" id="ramBarAdv"></div>
 
   <div class="sh" data-i18n="sh-cpu-detail">CPU 詳細分析</div>
   <div class="adequacy">
@@ -330,37 +318,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <div class="adeq-verdict" id="adeq-verdict">—</div>
   </div>
 
-  <div class="rg2">
-    <div class="rc">
-      <div class="rc-label">Prefill</div>
-      <div class="rc-val" id="r-pre" style="color:var(--blue)">—</div>
-      <div class="rc-unit" data-i18n="unit-pre">秒</div>
-      <div class="vtag-sm vg" id="r-pre-v" style="margin-top:6px"></div>
-      <div class="rc-detail" id="r-pre-d"></div>
-    </div>
-    <div class="rc">
-      <div class="rc-label" data-i18n="rc-ram-lbl">RAM 最低</div>
-      <div class="rc-val" id="r-ram" style="color:var(--teal)">—</div>
-      <div class="rc-unit" data-i18n="unit-ram">GB（DIMM 對齊）</div>
-      <div class="rc-detail" id="r-ram-d"></div>
-    </div>
-  </div>
-
-  <div class="warnbar" id="warnbar"></div>
-
-  <div class="sh" data-i18n="sh-eta">η 效率係數（CPU）</div>
-  <div class="eta-grid">
-    <div class="eta-item"><div class="eta-name" data-i18n="eta-vec-nm">η_vector（SIMD 效率）</div><div class="eta-val" id="e-vec">—</div></div>
-    <div class="eta-item"><div class="eta-name" data-i18n="eta-thr-nm">η_thread（執行緒調度）</div><div class="eta-val" id="e-thr">—</div></div>
-    <div class="eta-item"><div class="eta-name" data-i18n="eta-mem-nm">η_memory（子系統損耗）</div><div class="eta-val" id="e-mem">—</div></div>
-    <div class="eta-item"><div class="eta-name" data-i18n="eta-numa-nm">η_numa（拓撲懲罰）</div><div class="eta-val" id="e-numa">—</div></div>
-  </div>
-  <div class="eta-total">
-    <span class="eta-total-label" data-i18n="eta-total-lbl">η 合計（η_v × η_t × η_m × η_n）</span>
-    <span class="eta-total-val" id="e-total">—</span>
-  </div>
-
-  <div class="divider"></div>
   <div class="sh" data-i18n="sh-rec">優化建議</div>
   <div class="rec">
     <h3 id="rec-title">—</h3>
@@ -368,109 +325,69 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   </div>
 </div>
 </div>
+</div>
 
-<!-- BOTTOM -->
+<!-- ============ SHARED BOTTOM ============ -->
 <div class="bottom">
-
-  <!-- PARAM TABLE -->
   <div style="padding:20px 0 0">
     <div class="sh" data-i18n="sh-params">參數速查</div>
     <table class="param-table">
       <thead><tr><th data-i18n="pt-sym">符號</th><th data-i18n="pt-def">定義</th><th data-i18n="pt-dflt">預設／範圍</th></tr></thead>
       <tbody>
-        <tr><td class="sym">P</td><td class="def" data-i18n="pd-P">模型參數量</td><td class="dflt">1–235 B，自填</td></tr>
-        <tr><td class="sym">Q</td><td class="def" data-i18n="pd-Q">量化係數（bytes / param）</td><td class="dflt">Q2_K=0.25 … FP16=2.0</td></tr>
-        <tr><td class="sym">BW</td><td class="def" data-i18n="pd-BW">系統記憶體頻寬</td><td class="dflt">10–700 GB/s，自填</td></tr>
-        <tr><td class="sym">C</td><td class="def" data-i18n="pd-C">CPU 物理核心數（不含超執行緒）</td><td class="dflt">1–256，自填</td></tr>
-        <tr><td class="sym">L</td><td class="def" data-i18n="pd-L">輸入 token 數（context 長度）</td><td class="dflt">64–8192，預設 512</td></tr>
-        <tr><td class="sym">η</td><td class="def" data-i18n="pd-eta">CPU 執行效率 = η_v × η_t × η_m × η_n</td><td class="dflt">AVX2≈0.51 · AVX-512≈0.69（自動）</td></tr>
-        <tr><td class="sym">weightPassFactor <span class="pnew">v4</span></td><td class="def" data-i18n="pd-wpf">每 token 從 DRAM 重取的權重比例</td><td class="dflt">CPU=1.0 · iGPU=0.6 · NPU=0.35 · dGPU=0.25</td></tr>
-        <tr><td class="sym">reuseFactor <span class="pnew">v4</span></td><td class="def" data-i18n="pd-reuse">權重重複利用倍率（自動推導）</td><td class="dflt">CPU≈1.2 · iGPU≈2.9 · NPU≈4.6（clamp 1–12）</td></tr>
-        <tr><td class="sym">n_memory <span class="pnew">v4</span></td><td class="def" data-i18n="pd-nmem">記憶體控制器利用效率</td><td class="dflt">CPU=0.51 · iGPU=0.90 · NPU=0.95（自動）</td></tr>
-        <tr><td class="sym">BPT_raw <span class="pnew">v4</span></td><td class="def" data-i18n="pd-bptr">每 token 原始資料流量</td><td class="dflt">自動計算 GB/token（weight+KV+activation）</td></tr>
-        <tr><td class="sym">BPT_eff <span class="pnew">v4</span></td><td class="def" data-i18n="pd-bpte">有效每 token 流量 = BPT_raw / reuse</td><td class="dflt">自動計算 GB/token</td></tr>
-        <tr><td class="sym">EBW <span class="pnew">v4</span></td><td class="def" data-i18n="pd-ebw">有效頻寬 = BW × n_memory</td><td class="dflt">自動計算 GB/s</td></tr>
-        <tr><td class="sym">AI Streams <span class="pnew">v4</span></td><td class="def" data-i18n="pd-aistr">EBW / BPT_raw，跨平台比較指標</td><td class="dflt">自動計算</td></tr>
-        <tr><td class="sym">TPS</td><td class="def" data-i18n="pd-tps">實際生成速度 = min(TPS_mem, TPS_comp)</td><td class="dflt">自動計算，結果</td></tr>
-        <tr><td class="sym">T_prefill</td><td class="def" data-i18n="pd-tpre">首次回應等待 = 2×P×L / FLOPS（CPU）</td><td class="dflt">自動計算，結果</td></tr>
+        <tr><td class="sym">P / AP</td><td class="def" data-i18n="pd-P">模型參數量／MoE 每 token 活躍參數量</td><td class="dflt">0.5–235 B</td></tr>
+        <tr><td class="sym">Q</td><td class="def" data-i18n="pd-Q">量化係數（bytes / param）</td><td class="dflt">MXFP4=0.53 … FP16=2.0</td></tr>
+        <tr><td class="sym">BW</td><td class="def" data-i18n="pd-BW">系統記憶體頻寬（dGPU 為 VRAM 頻寬）</td><td class="dflt">10–700 GB/s</td></tr>
+        <tr><td class="sym">util</td><td class="def" data-i18n="pd-util">裝置頻寬利用率（校準常數，依平台家族與裝置）</td><td class="dflt">0.31–0.87</td></tr>
+        <tr><td class="sym">sizeF</td><td class="def" data-i18n="pd-sizef">模型大小修正：&lt;2.5B ×0.92 · 2.5–6B ×1.0 · &gt;6B ×1.12</td><td class="dflt" data-i18n="pv-auto">自動</td></tr>
+        <tr><td class="sym">L</td><td class="def" data-i18n="pd-L">上下文長度（tokens）</td><td class="dflt">512–65,536</td></tr>
+        <tr><td class="sym">KV/tok</td><td class="def" data-i18n="pd-kv">每 token KV cache 大小（GQA/MLA 架構決定，模型 preset 帶入）</td><td class="dflt">0.03–0.26 MB</td></tr>
+        <tr><td class="sym">TPS</td><td class="def" data-i18n="pd-tps">decode 速度 = BW × util × sizeF / model_bytes</td><td class="dflt" data-i18n="pv-result">結果</td></tr>
+        <tr><td class="sym">FTL</td><td class="def" data-i18n="pd-ftl">首字延遲 = ftl_coeff × P × (L/1024)，CPU 用 2PL/FLOPS</td><td class="dflt" data-i18n="pv-result">結果</td></tr>
+        <tr><td class="sym">RAM</td><td class="def" data-i18n="pd-ram">P×Q×1.05 + KV(L) + 2 GB 執行時開銷</td><td class="dflt" data-i18n="pv-result">結果</td></tr>
       </tbody>
     </table>
   </div>
 
-  <!-- THEORY — merged v4.0 -->
   <div style="padding:20px 0 0">
-    <div class="sh" data-i18n="sh-theory">理論依據 v4.0</div>
+    <div class="sh" data-i18n="sh-theory">理論依據 v5.0</div>
     <div class="theory-grid">
-
       <div class="theory">
-        <h3 data-i18n="th-dual">雙瓶頸統一公式</h3>
-        <code class="eq">TPS = <span class="hi">min</span>(TPS_mem, TPS_comp)</code>
-        <p data-i18n="tp-dual1">LLM 推論的速度上限由兩條路徑中較慢的一條決定：記憶體路徑（BW 有多快）或計算路徑（Core 有多強）。v4 在 v3 基礎上引入 reuseFactor 和 n_memory，使記憶體路徑能正確表達不同裝置的差異。</p>
+        <h3 data-i18n="th-core">核心公式</h3>
+        <code class="eq">TPS = <span class="hi">BW × util × sizeF</span> / model_bytes</code>
+        <p data-i18n="tp-core">Decode 對所有裝置都是記憶體頻寬瓶頸：每產生一個 token，全部活躍權重都要從記憶體讀一次。CPU / iGPU / NPU 打的是同一條 DRAM 匯流排，差異只在利用率 util——這是 v5 對 v4 reuse 體系的修正：共享記憶體平台上 NPU 不會因「重複利用」而超越頻寬上限。</p>
       </div>
-
       <div class="theory">
-        <h3 data-i18n="th-v4-mem">Memory Path（v4）</h3>
-        <code class="eq">BPT = weight + KV + activation<br>EBW = <span class="hi">BW</span> × n_memory<br>TPS_mem = EBW / (BPT / reuse)</code>
-        <p data-i18n="tp-v4-mem">weight = P×Q×weightPassFactor；KV 隨輸入長度 L 增長；activation = 0.05×weight。reuseFactor 越高，每次有效搬運量越少，TPS_mem 越高。這是 NPU/iGPU 速度快於 CPU 的根本原因。</p>
-      </div>
-
-      <div class="theory">
-        <h3 data-i18n="th-comp">Compute Path 與 Core Adequacy</h3>
-        <code class="eq">C_req = BW / tpc<br>TPS_comp (CPU) = C × tpc / (P×Q) × η</code>
+        <h3 data-i18n="th-util">util 校準係數</h3>
+        <p data-i18n="tp-util">util 是半經驗校準常數，依平台家族與裝置各自標定，範圍 0.31–0.87。新世代平台的 iGPU 與 NPU 利用率顯著高於前代；U 系列因功耗限制較 H 系列低約三成。標「校準」代表該家族有實測基礎；標「外推」代表僅由規格推算。</p>
         <table class="mini-t">
-          <thead><tr><th>SIMD</th><th>tpc</th><th data-i18n="th-avx2-c">CPU 需 cores</th></tr></thead>
+          <thead><tr><th data-i18n="th-dev">裝置</th><th data-i18n="th-range">util 範圍</th></tr></thead>
           <tbody>
-            <tr><td class="k">AVX2</td><td class="num">12 GB/s</td><td class="num">BW÷12</td></tr>
-            <tr><td class="k">AVX-512</td><td class="num">45 GB/s</td><td class="num">BW÷45</td></tr>
-          </tbody>
-        </table>
-        <p data-i18n="tp-comp1" style="margin-top:8px">iGPU / NPU / dGPU 使用 preset compute ceiling，不從 TOPS 推導。C &lt; C_req 時為 Compute-Bound，加 core 直接提升 TPS。</p>
-      </div>
-
-      <div class="theory">
-        <h3 data-i18n="th-eta">η 效率係數（CPU）</h3>
-        <code class="eq">η = η_v × η_t × η_m × η_n</code>
-        <table class="mini-t">
-          <thead><tr><th data-i18n="th-factor">因子</th><th>AVX2</th><th>AVX-512</th></tr></thead>
-          <tbody>
-            <tr><td class="k">η_vector</td><td class="num">0.75</td><td class="num">0.90</td></tr>
-            <tr><td class="k">η_thread</td><td class="num">0.80</td><td class="num">0.85</td></tr>
-            <tr><td class="k">η_memory</td><td class="num">0.85</td><td class="num">0.90</td></tr>
-            <tr><td class="k">η_numa</td><td class="num">1.0</td><td class="num">1.0</td></tr>
-            <tr><td class="k" data-i18n="tc-total">合計</td><td class="num">~0.51</td><td class="num">~0.69</td></tr>
-          </tbody>
-        </table>
-        <p data-i18n="tp-eta1" style="margin-top:8px">CPU n_memory = η 合計 = 0.51，與 v3 一致。iGPU/NPU 的 n_memory 直接使用裝置常數（0.90–0.95）。</p>
-      </div>
-
-      <div class="theory">
-        <h3 data-i18n="th-v4-aistr">AI Streams 與 Reuse Factor</h3>
-        <code class="eq">AI Streams = EBW / BPT_raw</code>
-        <table class="mini-t">
-          <thead><tr><th data-i18n="th-factor">Device</th><th>baseReuse</th><th data-i18n="th-desc-h">意義</th></tr></thead>
-          <tbody>
-            <tr><td class="k">CPU</td><td class="num">1.0</td><td data-i18n="tc-reuse-cpu">L2/L3 微量 reuse</td></tr>
-            <tr><td class="k">iGPU</td><td class="num">2.5</td><td data-i18n="tc-reuse-igpu">GPU SRAM tile reuse</td></tr>
-            <tr><td class="k">NPU</td><td class="num">4.0</td><td data-i18n="tc-reuse-npu">SRAM weight reuse 最強</td></tr>
-            <tr><td class="k">dGPU</td><td class="num">3.5</td><td data-i18n="tc-reuse-dgpu">HBM + SRAM 組合</td></tr>
-          </tbody>
-        </table>
-        <p data-i18n="tp-v4-aistr" style="margin-top:8px">AI Streams 是跨 Intel / AMD / NVIDIA / NPU 的統一指標，不依賴 TOPS。AI Streams 高代表平台能同時服務更多推論請求。</p>
-      </div>
-
-      <div class="theory">
-        <h3 data-i18n="th-prefill">Prefill 模型（CPU）</h3>
-        <code class="eq">T_prefill = 2 × P × L / FLOPS</code>
-        <p data-i18n="tp-pre1">Prefill 是矩陣-向量批次運算，屬 Compute-Bound，與 decode 完全不共用模型。FLOPS 估算：AVX2 ≈ 0.25 TFLOPS、AVX-512 ≈ 1.5 TFLOPS。</p>
-        <table class="mini-t">
-          <thead><tr><th data-i18n="th-cond">條件</th><th data-i18n="th-formula">簡化公式</th></tr></thead>
-          <tbody>
-            <tr><td class="k">AVX2</td><td class="num">P × L ÷ 125</td></tr>
-            <tr><td class="k">AVX-512</td><td class="num">P × L ÷ 750</td></tr>
+            <tr><td class="k">iGPU</td><td class="num">0.36–0.87</td></tr>
+            <tr><td class="k">NPU</td><td class="num">0.31–0.67</td></tr>
+            <tr><td class="k">CPU</td><td class="num">0.50 / 0.65 (AVX2/512)</td></tr>
+            <tr><td class="k">dGPU</td><td class="num">0.70</td></tr>
           </tbody>
         </table>
       </div>
-
+      <div class="theory">
+        <h3 data-i18n="th-ftl">首字延遲 FTL</h3>
+        <code class="eq">FTL = coeff × P × (L / 1024)</code>
+        <p data-i18n="tp-ftl">Prefill 是計算瓶頸，與 decode 完全不同。coeff（ms/B，1k 輸入基準）依裝置與世代標定：新世代 iGPU 約 45–65，前代約 290–630；NPU 在新世代約 190，前代約 650——NPU 的 prefill 到最新世代才真正可用。CPU 沿用 2PL/FLOPS。</p>
+      </div>
+      <div class="theory">
+        <h3 data-i18n="th-npu">NPU Runtime 成熟度</h3>
+        <p data-i18n="tp-npu">硬體能力 ≠ 可得性能。NPU 的 LLM 支援依 runtime 生態（驅動、編譯器、框架）差異極大：標「成熟」代表該世代 NPU 已可穩定接近 iGPU 水準；標「實驗性」代表 decode 約為 iGPU 的五到七成、prefill 明顯落後，採購決策不應以 NPU 數字為準。</p>
+      </div>
+      <div class="theory">
+        <h3 data-i18n="th-dgpu">dGPU 模型</h3>
+        <code class="eq">TPS = VRAM_BW × 0.70 / model_bytes<br><span class="hi">if</span> model + KV &gt; VRAM → <span class="hi">warning</span></code>
+        <p data-i18n="tp-dgpu">dGPU decode 由 VRAM 頻寬主導。模型＋KV 塞不進 VRAM 時進入 offload 情境——該區誤差可達 2–3 倍，本工具只給警告不給數字。</p>
+      </div>
+      <div class="theory">
+        <h3 data-i18n="th-kv">KV Cache（GQA-aware）</h3>
+        <code class="eq">KV = kv_per_token × L</code>
+        <p data-i18n="tp-kv">kv_per_token 由模型架構（層數 × KV heads × head_dim）決定，模型 preset 自動帶入；不同架構同參數量可差十倍。KV 計入 RAM/VRAM 需求，decode 時 KV 讀取流量併入 model_bytes。</p>
+      </div>
       <div class="theory span3">
         <h3 data-i18n="th-err">誤差來源與適用範圍</h3>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:10px">
@@ -478,637 +395,626 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
             <table class="mini-t">
               <thead><tr><th data-i18n="th-src">誤差來源</th><th data-i18n="th-impact">影響</th></tr></thead>
               <tbody>
-                <tr><td class="k">DRAM latency</td><td class="num">±5–10%</td></tr>
-                <tr><td class="k" data-i18n="tc-kv">KV cache 膨脹</td><td class="num">±5%</td></tr>
-                <tr><td class="k" data-i18n="tc-kernel">kernel 實作差異</td><td class="num">±5–10%</td></tr>
-                <tr><td class="k" data-i18n="tc-numa">NUMA 跨 socket</td><td class="num">±10–25%</td></tr>
-                <tr><td class="k" data-i18n="tc-reuse-err">Reuse 常數偏差</td><td class="num">±20–30%</td></tr>
-                <tr><td class="k" data-i18n="tc-terr">總誤差目標</td><td class="num">±15–25%</td></tr>
+                <tr><td class="k" data-i18n="tc-util-err">util 常數偏差</td><td class="num">±10–15%</td></tr>
+                <tr><td class="k" data-i18n="tc-runtime">runtime 版本差異</td><td class="num">±10–20%</td></tr>
+                <tr><td class="k" data-i18n="tc-quant">量化實作差異</td><td class="num">±5–10%</td></tr>
+                <tr><td class="k" data-i18n="tc-thermal">散熱／功耗牆</td><td class="num">±10%</td></tr>
+                <tr><td class="k" data-i18n="tc-terr">總誤差目標</td><td class="num">±15% / ±25%</td></tr>
               </tbody>
             </table>
           </div>
           <div>
             <p style="font-size:12px;color:var(--text3);font-weight:500;margin-bottom:8px" data-i18n="th-scope-ok">✓ 適用範圍</p>
-            <p style="font-size:12px;color:var(--text2);line-height:1.7" data-i18n="tp-scope-ok">CPU / iGPU / NPU / dGPU decode/prefill 估算。Batch 1–8。L = 64–8192。x86 與 ARM 架構（reuse 常數需校準）。Intel、AMD、Qualcomm、MTK 等主流平台。</p>
+            <p style="font-size:12px;color:var(--text2);line-height:1.7" data-i18n="tp-scope-ok">單機 CPU / iGPU / NPU / dGPU 的 decode 與 prefill 估算。稠密模型與 MoE。L ≤ 64k。已收錄平台家族內的 SKU 內插，以及自訂頻寬的外推。</p>
           </div>
           <div>
             <p style="font-size:12px;color:var(--text3);font-weight:500;margin-bottom:8px" data-i18n="th-scope-no">✗ 不適用範圍</p>
-            <p style="font-size:12px;color:var(--text2);line-height:1.7" data-i18n="tp-scope-no">Multi-node 分散式推論。量化精度 &lt; INT2。Flash Attention 大幅改變 KV 存取模式的場景。Arrow Lake E-core 密集負載（單一 C 值代入會高估）。誤差超過 ±30%。</p>
+            <p style="font-size:12px;color:var(--text2);line-height:1.7" data-i18n="tp-scope-no">多節點分散式推論。VRAM 不足的 offload 吞吐數字。跨陣營 NPU 對比。Batch serving 吞吐最佳化。投機解碼等 runtime 加速技術。</p>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- DISCLAIMER -->
   <div style="padding:24px 0 36px;margin-top:20px;border-top:0.5px solid var(--border)">
-    <div data-i18n="disc-head" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:18px;font-weight:500">使用限制與但書</div>
-    <div style="background:rgba(217,80,80,.07);border:0.5px solid rgba(217,80,80,.25);border-radius:6px;padding:15px 18px;margin-bottom:12px">
-      <div data-i18n="disc-warn-head" style="font-size:12px;font-weight:500;color:#e07070;margin-bottom:8px">⚠ 需要注意——可能影響採購判斷</div>
-      <div data-i18n="disc-l1-body" style="font-size:13px;color:#ccc9bc;line-height:1.8"><strong style="color:#e2e6ec">KV Cache 未計入 RAM 估算。</strong> 當 L &gt; 2048，模型快取會額外佔用記憶體。以 14B、L=4096 為例，快取約多佔 <strong style="color:#e2e6ec">3–5 GB</strong>。建議 L &gt; 2048 時 RAM 估算值加 4 GB。</div>
-    </div>
-    <div style="background:var(--bg2);border:0.5px solid rgba(255,255,255,.10);border-radius:6px;padding:15px 18px;margin-bottom:12px">
-      <div data-i18n="disc-l2-head" style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:12px">已知限制（不影響方向，影響數字精度）</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 28px">
-        <div style="display:flex;gap:8px"><span data-i18n="disc-k-flops" style="font-family:var(--mono);font-size:12px;color:#f0a030;flex-shrink:0;min-width:100px">FLOPS 固定常數</span><span data-i18n="disc-v-flops" style="font-size:12px;color:var(--text2)">N100 與 i9 共用同一常數，低頻平台 Prefill 偏樂觀 30–50%。</span></div>
-        <div style="display:flex;gap:8px"><span data-i18n="disc-k-numa" style="font-family:var(--mono);font-size:12px;color:#f0a030;flex-shrink:0;min-width:100px">η_numa 未建模</span><span data-i18n="disc-v-numa" style="font-size:12px;color:var(--text2)">雙路 Xeon 跨 socket 效率約打八折，目前未反映。</span></div>
-        <div style="display:flex;gap:8px"><span data-i18n="disc-k-ecore" style="font-family:var(--mono);font-size:12px;color:#f0a030;flex-shrink:0;min-width:100px">E-core 混合架構</span><span data-i18n="disc-v-ecore" style="font-size:12px;color:var(--text2)">Raptor Lake、Meteor Lake、Arrow Lake 的 P+E 混合架構，本工具以統一 tpc 值估算，P-core 與 E-core 特性不同，可能造成額外誤差。</span></div>
-        <div style="display:flex;gap:8px"><span style="font-family:var(--mono);font-size:12px;color:#f0a030;flex-shrink:0;min-width:100px">Attention O(L²)</span><span data-i18n="disc-v-attn" style="font-size:12px;color:var(--text2)">L &gt; 1024 後 Attention 計算量平方成長，Prefill 實際更慢。</span></div>
-        <div style="display:flex;gap:8px"><span data-i18n="disc-k-tpc" style="font-family:var(--mono);font-size:12px;color:#f0a030;flex-shrink:0;min-width:100px">Reuse 常數</span><span data-i18n="disc-v-tpc" style="font-size:12px;color:var(--text2)">baseReuse 為 heuristic，跨 NPU 世代可能有 ±30% 偏差。</span></div>
-        <div style="display:flex;gap:8px"><span style="font-family:var(--mono);font-size:12px;color:#f0a030;flex-shrink:0;min-width:100px">AMD 平台</span><span data-i18n="disc-v-amd" style="font-size:12px;color:var(--text2)">tpc 常數（12/45 GB/s）以 Intel 實測為基準，AMD 方向正確但數字誤差可達 ±20–30%。</span></div>
-      </div>
-    </div>
-    <div data-i18n="disc-l3" style="font-size:12px;color:var(--text3);line-height:1.7">本工具定位為 <span style="color:var(--text2);font-family:var(--mono)">semi-empirical 工程估算器</span>，精度目標 ±15%（CPU），±25%（iGPU/NPU），尚待 benchmark 校準。不適用於多節點分散式推論。</div>
+    <div data-i18n="disc-head" style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px;font-weight:500">使用限制與但書</div>
+    <div data-i18n="disc-body" style="font-size:12px;color:var(--text3);line-height:1.8">本工具為 semi-empirical 工程估算器：以公開規格＋校準常數推算，非實測保證。「校準」精度目標 ±15%，「外推」±25%。實際效能受 runtime 版本、驅動、散熱設計、記憶體時序影響。採購決策請以實機驗證為最終依據。</div>
   </div>
-
 </div>
 
 <script>
-var DEVICE_PROPS = {
-  cpu:  {baseReuse:1.0, baseNMemory:0.51, weightPassFactor:1.00},
-  igpu: {baseReuse:2.5, baseNMemory:0.90, weightPassFactor:0.60},
-  npu:  {baseReuse:4.0, baseNMemory:0.95, weightPassFactor:0.35},
-  dgpu: {baseReuse:3.5, baseNMemory:0.92, weightPassFactor:0.25}
-};
-var MODE_KV  = {decode:1.0, prefill:0.3, hybrid:0.7};
-var BATCH_FB = {b1:1.0, b4:1.36, b8:1.84};
-
-var PRESETS = [
-  {name:'N355',              tag:'Twin Lake',      spec:'DDR5-4800 · 2ch',     bw:38.4,  c:8,  mhz:3000, simd:'avx2',   devs:{cpu:true,                              igpu:{cTps:10},                              npu:{cTps:15,baseReuse:2.0,wpf:0.42}, dgpu:null}},
-  {name:'i9-12900K',         tag:'Alder Lake',     spec:'DDR5-4800 · 2ch',     bw:76.8,  c:16, mhz:5100, simd:'avx2',   devs:{cpu:true,                              igpu:{cTps:12},                              npu:null,                              dgpu:null}},
-  {name:'i9-13/14900K',      tag:'Raptor Lake',    spec:'DDR5-5600 · 2ch',     bw:89.6,  c:24, mhz:5800, simd:'avx2',   devs:{cpu:true,                              igpu:{cTps:15},                              npu:null,                              dgpu:null}},
-  {name:'Core Ultra 9 185H', tag:'Meteor Lake',    spec:'LPDDR5x-7467 · 2ch',  bw:89.6,  c:16, mhz:5100, simd:'avx2',   devs:{cpu:true,                              igpu:{cTps:16},                              npu:{cTps:20,baseReuse:2.0,wpf:0.40}, dgpu:null}},
-  {name:'Core Ultra 9 285K', tag:'Arrow Lake',     spec:'DDR5-6400 · 2ch',     bw:102.4, c:24, mhz:5700, simd:'avx2',   devs:{cpu:true,                              igpu:{cTps:18},                              npu:{cTps:25,baseReuse:2.2,wpf:0.38}, dgpu:null}},
-  {name:'Core Ultra 7 258V', tag:'Lunar Lake',     spec:'LPDDR5x-8533 · 2ch',  bw:136.5, c:8,  mhz:4800, simd:'avx2',   devs:{cpu:true,                              igpu:{cTps:20},                              npu:{cTps:38,baseReuse:5.0,wpf:0.25}, dgpu:null}},
-  {name:'Xeon 6 960P',       tag:'Granite Rapids', spec:'ECC DDR5-6400 · 8ch', bw:409.6, c:72, mhz:3600, simd:'avx512', devs:{cpu:true,                              igpu:null,                                   npu:null,                              dgpu:null}},
-  {name:'Xeon W9-3595X',     tag:'Sapphire Rapids',spec:'ECC DDR5-4800 · 8ch', bw:307.2, c:60, mhz:4800, simd:'avx512', devs:{cpu:true,                              igpu:null,                                   npu:null,                              dgpu:null}},
-  {name:'EPYC 9654',         tag:'Genoa (AMD)',    spec:'DDR5-4800 · 12ch',    bw:460.8, c:96, mhz:3700, simd:'avx512', devs:{cpu:true,                              igpu:null,                                   npu:null,                              dgpu:null}},
-  {name:'Ryzen 9 7950X',     tag:'Zen 4 (AMD)',    spec:'DDR5-5200 · 2ch',     bw:83.2,  c:16, mhz:5700, simd:'avx512', devs:{cpu:true,                              igpu:{cTps:6},                               npu:null,                              dgpu:null}}
+/* ===================== DATA ===================== */
+var QUANTS=[
+  {id:'MXFP4',label:'MXFP4',si:'4.25b',bpw:0.53},
+  {id:'INT4', label:'INT4 / Q4_K_M',si:'4.5b',bpw:0.56},
+  {id:'Q5',   label:'Q5_K_M',si:'5.5b',bpw:0.69},
+  {id:'INT8', label:'INT8 / Q8_0 / FP8',si:'8b',bpw:1.00},
+  {id:'FP16', label:'FP16',si:'16b',bpw:2.00}
 ];
 
-var ZH = {
-  'topbar-sub':'BW + Compute 雙瓶頸 · Heterogeneous · AI Streams',
-  'download-btn':'↓ 下載報告',
-  'sh-model':'模型與量化',
-  'q-label':'量化格式 Q',
-  'sh-mode':'推論模式',
-  'mode-decode-desc':'每次輸出一個字，是 LLM 最常見的工作狀態',
-  'mode-prefill-desc':'一次讀完整段輸入，計算密集，影響首次回應時間',
-  'mode-hybrid-desc':'讀取與輸出交替，長對話的典型模式',
-  'sh-batch':'批次大小',
-  'batch-b1-desc':'單一對話',
-  'batch-b4-desc':'4 路並行',
-  'batch-b8-desc':'8 路並行',
-  'sh-cpu':'CPU 規格',
-  'lbl-P':'模型參數 P',
-  'moe-label':'MoE 模式',
-  'moe-active-lbl':'Active P',
-  'lbl-BW':'記憶體頻寬 BW',
-  'bw-hint':'不確定？選上方平台預設即可',
-  'lbl-C':'Core 數 C（CPU 核心數）',
-  'lbl-simd':'SIMD 能力',
-  'lbl-L':'輸入長度 L（tokens）',
-  'sh-preset':'平台預設',
-  'sh-parallel':'並行裝置估算',
-  'sh-cpu-detail':'CPU 詳細分析',
-  'adeq-req-lbl':'需要','adeq-cur-lbl':'實際',
-  'unit-pre':'秒','rc-ram-lbl':'RAM 最低','unit-ram':'GB（DIMM 對齊）',
-  'sh-eta':'η 效率係數（CPU）',
-  'eta-vec-nm':'η_vector（SIMD 效率）','eta-thr-nm':'η_thread（執行緒調度）',
-  'eta-mem-nm':'η_memory（子系統損耗）','eta-numa-nm':'η_numa（拓撲懲罰）',
-  'eta-total-lbl':'η 合計（η_v × η_t × η_m × η_n）',
-  'sh-rec':'優化建議',
-  'sh-params':'參數速查','pt-sym':'符號','pt-def':'定義','pt-dflt':'預設／範圍',
-  'pd-P':'模型參數量',
-  'pd-Q':'量化係數（bytes / param）',
-  'pd-BW':'系統記憶體頻寬',
-  'pd-C':'CPU 物理核心數（不含超執行緒）',
-  'pd-L':'輸入 token 數（context 長度）',
-  'pd-eta':'CPU 執行效率 = η_v × η_t × η_m × η_n',
-  'pd-wpf':'每 token 從 DRAM 重取的權重比例',
-  'pd-reuse':'權重重複利用倍率（自動推導）',
-  'pd-nmem':'記憶體控制器利用效率',
-  'pd-bptr':'每 token 原始資料流量',
-  'pd-bpte':'有效每 token 流量 = BPT_raw / reuse',
-  'pd-ebw':'有效頻寬 = BW × n_memory',
-  'pd-aistr':'EBW / BPT_raw，跨平台比較指標',
-  'pd-tps':'實際生成速度 = min(TPS_mem, TPS_comp)',
-  'pd-tpre':'首次回應等待 = 2×P×L / FLOPS（CPU）',
-  'sh-theory':'理論依據 v4.0',
-  'th-dual':'雙瓶頸統一公式',
-  'tp-dual1':'LLM 推論的速度上限由兩條路徑中較慢的一條決定：記憶體路徑（BW 有多快）或計算路徑（Core 有多強）。v4 在 v3 基礎上引入 reuseFactor 和 n_memory，使記憶體路徑能正確表達不同裝置的差異。',
-  'th-v4-mem':'Memory Path（v4）',
-  'tp-v4-mem':'weight = P×Q×weightPassFactor；KV 隨輸入長度 L 增長；activation = 0.05×weight。reuseFactor 越高，每次有效搬運量越少，TPS_mem 越高。這是 NPU/iGPU 速度快於 CPU 的根本原因。',
-  'th-comp':'Compute Path 與 Core Adequacy',
-  'th-avx2-c':'CPU 需 cores',
-  'tp-comp1':'iGPU / NPU / dGPU 使用 preset compute ceiling，不從 TOPS 推導。C &lt; C_req 時為 Compute-Bound，加 core 直接提升 TPS。',
-  'th-eta':'η 效率係數（CPU）','th-factor':'裝置','tc-total':'合計',
-  'tp-eta1':'CPU n_memory = η 合計 = 0.51，與 v3 一致。iGPU/NPU 的 n_memory 直接使用裝置常數（0.90–0.95）。',
-  'th-v4-aistr':'AI Streams 與 Reuse Factor',
-  'th-desc-h':'意義',
-  'tc-reuse-cpu':'L2/L3 微量 reuse',
-  'tc-reuse-igpu':'GPU SRAM tile reuse',
-  'tc-reuse-npu':'SRAM weight reuse 最強',
-  'tc-reuse-dgpu':'HBM + SRAM 組合',
-  'tp-v4-aistr':'AI Streams 是跨 Intel / AMD / NVIDIA / NPU 的統一指標，不依賴 TOPS。AI Streams 高代表平台能同時服務更多推論請求。',
-  'th-prefill':'Prefill 模型（CPU）',
-  'tp-pre1':'Prefill 是矩陣-向量批次運算，屬 Compute-Bound，與 decode 完全不共用模型。FLOPS 估算：AVX2 ≈ 0.25 TFLOPS、AVX-512 ≈ 1.5 TFLOPS。',
-  'th-cond':'條件','th-formula':'簡化公式',
-  'th-err':'誤差來源與適用範圍',
-  'th-src':'誤差來源','th-impact':'影響',
-  'tc-kv':'KV cache 膨脹','tc-kernel':'kernel 實作差異','tc-numa':'NUMA 跨 socket',
-  'tc-reuse-err':'Reuse 常數偏差','tc-terr':'總誤差目標',
-  'th-scope-ok':'✓ 適用範圍',
-  'tp-scope-ok':'CPU / iGPU / NPU / dGPU decode/prefill 估算。Batch 1–8。L = 64–8192。x86 與 ARM 架構（reuse 常數需校準）。Intel、AMD、Qualcomm、MTK 等主流平台。',
-  'th-scope-no':'✗ 不適用範圍',
-  'tp-scope-no':'Multi-node 分散式推論。量化精度 &lt; INT2。Flash Attention 大幅改變 KV 存取模式的場景。Arrow Lake E-core 密集負載（單一 C 值代入會高估）。誤差超過 ±30%。',
-  'disc-head':'使用限制與但書',
-  'disc-warn-head':'⚠ 需要注意——可能影響採購判斷',
-  'disc-l1-body':'<strong style="color:#e2e6ec">KV Cache 未計入 RAM 估算。</strong> 當 L &gt; 2048，模型快取會額外佔用記憶體。以 14B、L=4096 為例，快取約多佔 <strong style="color:#e2e6ec">3–5 GB</strong>。建議 L &gt; 2048 時 RAM 估算值加 4 GB。',
-  'disc-l2-head':'已知限制（不影響方向，影響數字精度）',
-  'disc-k-flops':'FLOPS 固定常數','disc-v-flops':'N100 與 i9 共用同一常數，低頻平台 Prefill 偏樂觀 30–50%。',
-  'disc-k-numa':'η_numa 未建模','disc-v-numa':'雙路 Xeon 跨 socket 效率約打八折，目前未反映。',
-  'disc-k-ecore':'E-core 混合架構','disc-v-ecore':'Raptor Lake、Meteor Lake、Arrow Lake 的 P+E 混合架構，本工具以統一 tpc 值估算，P-core 與 E-core 特性不同，可能造成額外誤差。',
-  'disc-v-batch':'B=4/8 的 reuse 提升為 heuristic，實際值依模型架構不同。',
-  'disc-v-attn':'L &gt; 1024 後 Attention 計算量平方成長，Prefill 實際更慢。',
-  'disc-k-tpc':'Reuse 常數','disc-v-tpc':'baseReuse 為 heuristic，跨 NPU 世代可能有 ±30% 偏差。',
-  'disc-v-amd':'tpc 常數（12/45 GB/s）以 Intel 實測為基準，AMD 方向正確但數字誤差可達 ±20–30%。',
-  'disc-l3':'本工具定位為 <span style="color:var(--text2);font-family:var(--mono)">semi-empirical 工程估算器</span>，精度目標 ±15%（CPU），±25%（iGPU/NPU），尚待 benchmark 校準。不適用於多節點分散式推論。',
-  'dev-cpu-hint':'通用，reuse 最低','dev-igpu-hint':'共享 DDR，中等 reuse',
-  'dev-npu-hint':'AI 專用，高 reuse','dev-dgpu-hint':'HBM，最高頻寬',
-  'dev-na-cpu':'此平台不支援',
-  'dev-na-igpu':'此平台不支援',
-  'dev-na-npu':'此平台不支援',
-  'dev-na-dgpu':'dGPU（HBM）的 TPS 估算需要獨立模型（HBM 頻寬、SM occupancy、tensor core 利用率），與本工具的 CPU/NPU 公式不相容，不提供估算。\n如需 GPU 實測數據，請搜尋：<span style="font-family:var(--mono);color:var(--text2)">MLCommons MLPerf Inference Datacenter Results</span>',
-  'lbl-ebw':'有效頻寬','lbl-reuse':'Reuse','lbl-bpt-raw':'原始 BPT','lbl-bpt-eff':'有效 BPT','lbl-ai-streams':'AI Streams',
-  'adeq-ok':function(C,req){return 'Core 充足（'+C+' \u2265 '+req+'）：再加 core 無法提升 TPS，BW 是上限。';},
-  'adeq-low':function(C,req){return 'Core 不足（'+C+' < '+req+'）：TPS 受 compute 限制，加 core 直接提升速度。';},
-  'v-fluid':'流暢','v-ok':'可用','v-slow':'緩慢','v-bad':'不可用',
-  'v-fast':'快','v-acc':'可接受','v-lag':'稍慢','v-tooslow':'太慢','pre-simp':'簡化',
-  'w-avx':function(pre,fast){return 'Prefill '+pre+'s → 切換 AVX-512 可縮至 '+fast+'s';},
-  'w-tps':'TPS < 1 → 模型過大或頻寬不足，建議縮模型或升平台',
-  'w-ram':function(g){return 'RAM 緊繃，建議上一級 DIMM（'+g+' GB）';},
-  'w-comp':'Compute-Bound：加 core 可線性提升 TPS，BW 尚有餘裕',
-  'rec-mem-title':'優化方向（Memory-Bound）','rec-comp-title':'優化方向（Compute-Bound）','rec-hyb-title':'優化方向（Hybrid Zone）',
-  'rec-mem':function(req){
-    var recs=['↑ 增加記憶體通道數（2ch → 4ch → 8ch）','↑ 升級記憶體速率（DDR5-5600 → 6400 → 8800）','↓ 縮小量化格式（Q4_K_M → Q3_K_M）以減少 BPT'];
-    var p=PRESETS[curPresetIdx];
-    if(p.devs.igpu||p.devs.npu) recs.push('→ 切換至 iGPU/NPU 透過 reuse 大幅降低有效 BPT');
-    recs.push('→ 加 core 無效，C 已超過 C_required='+req);
-    return recs;
-  },
-  'rec-hyb':function(){return['→ 接近轉折點，兩方向改善均有邊際效益','↑ BW +20% 或 Core +20% 均可改善約 15–20% TPS','優先確認 --threads 設為物理 core 數'];},
-  'rec-comp':function(C,req){return['↑ 選用更高 core 數的平台（當前 '+C+' < 需要 '+req+'）','↑ 升級 AVX2 → AVX-512（tpc 12 → 45 GB/s）','→ 升級記憶體頻寬效果有限，compute 才是瓶頸'];}
-};
+/* util / ftl are calibrated bare constants per family (iGPU / NPU); ftl in ms per B-param at 1k input */
+var PLATFORMS=[
+ {id:'388H', name:'Core Ultra X9 388H', tag:'PTL-H', bw:119.5, c:16, simd:'avx2', uI:.75, uN:.67, fI:45,  fN:190, npu:'ok',  conf:'cal'},
+ {id:'358H', name:'Core Ultra X7 358H', tag:'PTL-H', bw:136.5, c:16, simd:'avx2', uI:.75, uN:.67, fI:45,  fN:190, npu:'ok',  conf:'cal'},
+ {id:'366H', name:'Core Ultra 7 366H',  tag:'PTL-H', bw:102.4, c:16, simd:'avx2', uI:.75, uN:.67, fI:45,  fN:190, npu:'ok',  conf:'cal'},
+ {id:'338H', name:'Core Ultra 5 338H',  tag:'PTL-H', bw:102.4, c:12, simd:'avx2', uI:.75, uN:.67, fI:45,  fN:190, npu:'ok',  conf:'cal'},
+ {id:'336H', name:'Core Ultra 5 336H',  tag:'PTL-H', bw:102.4, c:12, simd:'avx2', uI:.75, uN:.67, fI:50,  fN:190, npu:'ok',  conf:'cal'},
+ {id:'365',  name:'Core Ultra 7 365',   tag:'PTL',   bw:102.4, c:8,  simd:'avx2', uI:.75, uN:.67, fI:50,  fN:190, npu:'ok',  conf:'cal'},
+ {id:'335',  name:'Core Ultra 5 335',   tag:'PTL',   bw:102.4, c:8,  simd:'avx2', uI:.75, uN:.67, fI:50,  fN:190, npu:'ok',  conf:'cal'},
+ {id:'258V', name:'Core Ultra 7 258V',  tag:'LNL',   bw:136.5, c:8,  simd:'avx2', uI:.70, uN:.60, fI:150, fN:300, npu:'ok',  conf:'est'},
+ {id:'226V', name:'Core Ultra 5 226V',  tag:'LNL',   bw:136.5, c:8,  simd:'avx2', uI:.70, uN:.60, fI:160, fN:320, npu:'ok',  conf:'est'},
+ {id:'285H', name:'Core Ultra 9 285H',  tag:'ARL-H', bw:102.4, c:16, simd:'avx2', uI:.67, uN:.38, fI:65,  fN:650, npu:'exp', conf:'cal'},
+ {id:'265H', name:'Core Ultra 7 265H',  tag:'ARL-H', bw:102.4, c:16, simd:'avx2', uI:.67, uN:.38, fI:65,  fN:650, npu:'exp', conf:'cal'},
+ {id:'235H', name:'Core Ultra 5 235H',  tag:'ARL-H', bw:89.6,  c:14, simd:'avx2', uI:.67, uN:.38, fI:70,  fN:650, npu:'exp', conf:'cal'},
+ {id:'265U', name:'Core Ultra 7 265U',  tag:'ARL-U', bw:102.4, c:12, simd:'avx2', uI:.44, uN:.31, fI:350, fN:800, npu:'exp', conf:'cal'},
+ {id:'225U', name:'Core Ultra 5 225U',  tag:'ARL-U', bw:89.6,  c:12, simd:'avx2', uI:.44, uN:.31, fI:350, fN:800, npu:'exp', conf:'cal'},
+ {id:'285K', name:'Core Ultra 9 285K',  tag:'ARL-S', bw:102.4, c:24, simd:'avx2', uI:.51, uN:.40, fI:590, fN:700, npu:'exp', conf:'cal'},
+ {id:'265S', name:'Core Ultra 7 265',   tag:'ARL-S', bw:102.4, c:20, simd:'avx2', uI:.51, uN:.40, fI:590, fN:700, npu:'exp', conf:'cal'},
+ {id:'245S', name:'Core Ultra 5 245',   tag:'ARL-S', bw:102.4, c:14, simd:'avx2', uI:.51, uN:.40, fI:590, fN:700, npu:'exp', conf:'cal'},
+ {id:'185H', name:'Core Ultra 9 185H',  tag:'MTL-H', bw:119.5, c:16, simd:'avx2', uI:.61, uN:.42, fI:290, fN:650, npu:'exp', conf:'cal'},
+ {id:'165H', name:'Core Ultra 7 165H',  tag:'MTL-H', bw:76.8,  c:16, simd:'avx2', uI:.61, uN:.42, fI:290, fN:650, npu:'exp', conf:'cal'},
+ {id:'125H', name:'Core Ultra 5 125H',  tag:'MTL-H', bw:76.8,  c:14, simd:'avx2', uI:.61, uN:.42, fI:300, fN:650, npu:'exp', conf:'cal'},
+ {id:'165U', name:'Core Ultra 7 165U',  tag:'MTL-U', bw:76.8,  c:12, simd:'avx2', uI:.50, uN:.35, fI:400, fN:800, npu:'exp', conf:'cal'},
+ {id:'125U', name:'Core Ultra 5 125U',  tag:'MTL-U', bw:76.8,  c:12, simd:'avx2', uI:.50, uN:.35, fI:400, fN:800, npu:'exp', conf:'cal'},
+ {id:'350',  name:'Core 7 350',         tag:'WCL',   bw:51.2,  c:6,  simd:'avx2', uI:.87, uN:.32, fI:900, fN:650, npu:'exp', conf:'cal'},
+ {id:'250H', name:'Core 7 250H',        tag:'RPL-H', bw:89.6,  c:14, simd:'avx2', uI:.64, uN:0,   fI:630, fN:0,   npu:null,  conf:'cal'},
+ {id:'220H', name:'Core 5 220H',        tag:'RPL-H', bw:76.8,  c:12, simd:'avx2', uI:.64, uN:0,   fI:650, fN:0,   npu:null,  conf:'cal'},
+ {id:'250U', name:'Core 7 250U',        tag:'RPL-U', bw:76.8,  c:10, simd:'avx2', uI:.60, uN:0,   fI:700, fN:0,   npu:null,  conf:'cal'},
+ {id:'251E', name:'Core 7 251E',        tag:'BTL-S', bw:76.8,  c:24, simd:'avx2', uI:.36, uN:0,   fI:1500,fN:0,   npu:null,  conf:'cal'},
+ {id:'221E', name:'Core 5 221E',        tag:'BTL-S', bw:76.8,  c:14, simd:'avx2', uI:.36, uN:0,   fI:1500,fN:0,   npu:null,  conf:'cal'},
+ {id:'N355', name:'Core 3 N355',        tag:'TWL',   bw:38.4,  c:8,  simd:'avx2', uI:.55, uN:0,   fI:2000,fN:0,   npu:null,  conf:'cal'},
+ {id:'N250', name:'Processor N250',     tag:'TWL',   bw:38.4,  c:4,  simd:'avx2', uI:.55, uN:0,   fI:2400,fN:0,   npu:null,  conf:'cal'},
+ {id:'X6960P',name:'Xeon 6 960P',       tag:'GNR',   bw:409.6, c:72, simd:'avx512',uI:0,  uN:0,   fI:0,   fN:0,   npu:null,  conf:'est'},
+ {id:'W3595X',name:'Xeon W9-3595X',     tag:'SPR-W', bw:307.2, c:60, simd:'avx512',uI:0,  uN:0,   fI:0,   fN:0,   npu:null,  conf:'est'}
+];
 
-var EN = {
-  'topbar-sub':'BW + Compute Dual Bottleneck · Heterogeneous · AI Streams',
-  'download-btn':'\u2193 Download Report',
-  'sh-model':'Model & Quantization',
-  'q-label':'Quantization Q',
-  'sh-mode':'Runtime Mode',
-  'mode-decode-desc':'Outputs one token at a time \u2014 the most common LLM operating state',
-  'mode-prefill-desc':'Reads the entire input at once; compute-intensive, affects first-token latency',
-  'mode-hybrid-desc':'Alternates read and generate; typical pattern for long conversations',
-  'sh-batch':'Batch Size',
-  'batch-b1-desc':'Single session',
-  'batch-b4-desc':'4 concurrent',
-  'batch-b8-desc':'8 concurrent',
-  'sh-cpu':'CPU Specs',
-  'lbl-P':'Model Params P',
-  'moe-label':'MoE Mode',
-  'moe-active-lbl':'Active P',
-  'lbl-BW':'Memory BW',
-  'bw-hint':'Unsure? Select a platform preset above.',
-  'lbl-C':'Core Count C (CPU cores)',
-  'lbl-simd':'SIMD Capability',
-  'lbl-L':'Input Length L (tokens)',
-  'sh-preset':'Platform Presets',
-  'sh-parallel':'Parallel Device Estimation',
-  'sh-cpu-detail':'CPU Detail',
-  'adeq-req-lbl':'Required','adeq-cur-lbl':'Actual',
-  'unit-pre':'sec','rc-ram-lbl':'RAM Min','unit-ram':'GB (DIMM aligned)',
-  'sh-eta':'\u03b7 Efficiency (CPU)',
-  'eta-vec-nm':'\u03b7_vector (SIMD efficiency)','eta-thr-nm':'\u03b7_thread (thread scheduling)',
-  'eta-mem-nm':'\u03b7_memory (subsystem loss)','eta-numa-nm':'\u03b7_numa (topology penalty)',
-  'eta-total-lbl':'\u03b7 Total (\u03b7_v \u00d7 \u03b7_t \u00d7 \u03b7_m \u00d7 \u03b7_n)',
-  'sh-rec':'Recommendations',
-  'sh-params':'Parameter Reference','pt-sym':'Symbol','pt-def':'Definition','pt-dflt':'Default / Range',
-  'pd-P':'Model parameter count',
-  'pd-Q':'Quantization factor (bytes / param)',
-  'pd-BW':'System memory bandwidth',
-  'pd-C':'CPU physical core count (no HT)',
-  'pd-L':'Input token count (context length)',
-  'pd-eta':'CPU execution efficiency = \u03b7_v \u00d7 \u03b7_t \u00d7 \u03b7_m \u00d7 \u03b7_n',
-  'pd-wpf':'Fraction of weights re-fetched from DRAM per token',
-  'pd-reuse':'Weight reuse multiplier (auto-derived)',
-  'pd-nmem':'Memory controller utilization efficiency',
-  'pd-bptr':'Raw bytes per token (weight+KV+activation)',
-  'pd-bpte':'Effective BPT = BPT_raw / reuse',
-  'pd-ebw':'Effective BW = BW \u00d7 n_memory',
-  'pd-aistr':'EBW / BPT_raw, cross-platform comparison metric',
-  'pd-tps':'Actual token rate = min(TPS_mem, TPS_comp)',
-  'pd-tpre':'First-token latency = 2\u00d7P\u00d7L / FLOPS (CPU)',
-  'sh-theory':'Theory v4.0',
-  'th-dual':'Unified Dual-Bottleneck Formula',
-  'tp-dual1':'LLM inference speed is limited by whichever path is slower: memory path (how fast BW is) or compute path (how strong the cores are). v4 extends v3 with reuseFactor and n_memory so the memory path correctly captures device differences.',
-  'th-v4-mem':'Memory Path (v4)',
-  'tp-v4-mem':'weight = P\u00d7Q\u00d7weightPassFactor; KV grows with input length L; activation = 0.05\u00d7weight. Higher reuseFactor means less effective data movement per token and higher TPS_mem \u2014 this is why NPU/iGPU outperforms CPU.',
-  'th-comp':'Compute Path & Core Adequacy',
-  'th-avx2-c':'CPU cores needed',
-  'tp-comp1':'iGPU / NPU / dGPU use a preset compute ceiling TPS, not derived from TOPS. When C < C_req, the system is Compute-Bound and adding cores directly improves TPS.',
-  'th-eta':'\u03b7 Efficiency Decomposition (CPU)','th-factor':'Device','tc-total':'Total',
-  'tp-eta1':'CPU n_memory = \u03b7 total = 0.51, consistent with v3. iGPU/NPU use device constants directly (0.90\u20130.95).',
-  'th-v4-aistr':'AI Streams & Reuse Factor',
-  'th-desc-h':'Meaning',
-  'tc-reuse-cpu':'L2/L3 minor reuse',
-  'tc-reuse-igpu':'GPU SRAM tile reuse',
-  'tc-reuse-npu':'Strongest SRAM weight reuse',
-  'tc-reuse-dgpu':'HBM + SRAM combination',
-  'tp-v4-aistr':'AI Streams is a unified cross-platform metric (Intel / AMD / NVIDIA / NPU) that does not rely on TOPS. Higher AI Streams means the platform can serve more concurrent inference requests.',
-  'th-prefill':'Prefill Model (CPU)',
-  'tp-pre1':'Prefill is a batched matrix-vector operation \u2014 Compute-Bound \u2014 independent from the decode model. FLOPS: AVX2 \u2248 0.25 TFLOPS, AVX-512 \u2248 1.5 TFLOPS.',
-  'th-cond':'Condition','th-formula':'Simplified formula',
-  'th-err':'Error Sources & Scope',
-  'th-src':'Source','th-impact':'Impact',
-  'tc-kv':'KV cache growth','tc-kernel':'Kernel implementation variance','tc-numa':'NUMA cross-socket',
-  'tc-reuse-err':'Reuse constant deviation','tc-terr':'Total error target',
-  'th-scope-ok':'\u2713 Applicable scope',
-  'tp-scope-ok':'CPU / iGPU / NPU / dGPU decode/prefill estimation. Batch 1\u20138. L = 64\u20138192. x86 and ARM architectures (reuse constants require calibration). Intel, AMD, Qualcomm, MTK and other mainstream platforms.',
-  'th-scope-no':'\u2717 Not applicable',
-  'tp-scope-no':'Multi-node distributed inference. Quantization below INT2. Flash Attention scenarios with significantly altered KV access patterns. Arrow Lake E-core intensive workloads (single C value overestimates). Error exceeds \u00b130%.',
-  'disc-head':'Limitations & Notes',
-  'disc-warn-head':'\u26a0 Important \u2014 may affect purchasing decisions',
-  'disc-l1-body':'<strong style="color:#e2e6ec">KV Cache not included in RAM estimate.</strong> When L &gt; 2048, KV cache consumes additional memory. For 14B at L=4096, overhead is approximately <strong style="color:#e2e6ec">3\u20135 GB</strong>. Add 4 GB to the RAM estimate whenever L &gt; 2048.',
-  'disc-l2-head':'Known limitations (affect precision, not direction)',
-  'disc-k-flops':'FLOPS constant','disc-v-flops':'N100 and i9-14900K share the same constant; low-clock platforms overestimate Prefill by ~30\u201350%.',
-  'disc-k-numa':'\u03b7_numa not modeled','disc-v-numa':'Dual-socket Xeon cross-socket incurs ~20% penalty. Not modeled.',
-  'disc-k-ecore':'P+E hybrid architecture','disc-v-ecore':'Raptor Lake, Meteor Lake and Arrow Lake use a unified tpc value for both P-cores and E-cores. Since their performance characteristics differ, additional error is possible.',
-  'disc-v-batch':'B=4/8 reuse boost is heuristic; actual values vary by model architecture.',
-  'disc-v-attn':'Beyond L > 1024, Attention grows as O(L\u00b2); Prefill is slower than the linear estimate.',
-  'disc-k-tpc':'Reuse constants','disc-v-tpc':'baseReuse is heuristic; deviation of \u00b130% possible across NPU generations.',
-  'disc-v-amd':'tpc constants (12/45 GB/s) are calibrated on Intel hardware. AMD direction is correct but numerical error may reach \u00b120\u201330%.',
-  'disc-l3':'This tool is a <span style="color:var(--text2);font-family:var(--mono)">semi-empirical engineering estimator</span>. Precision target: \u00b115% (CPU), \u00b125% (iGPU/NPU), pending benchmark calibration. Not applicable to multi-node distributed inference.',
-  'dev-cpu-hint':'General purpose, lowest reuse','dev-igpu-hint':'Shared DDR, moderate reuse',
-  'dev-npu-hint':'AI-dedicated, high reuse','dev-dgpu-hint':'HBM, highest BW',
-  'dev-na-cpu':'Not available on this platform',
-  'dev-na-igpu':'Not available on this platform',
-  'dev-na-npu':'Not available on this platform',
-  'dev-na-dgpu':'dGPU (HBM) inference estimation requires a separate model (HBM bandwidth, SM occupancy, tensor core utilization) incompatible with this tool\'s CPU/NPU formulas.\nFor GPU benchmark data, search: <span style="font-family:var(--mono);color:var(--text2)">MLCommons MLPerf Inference Datacenter Results</span>',
-  'lbl-ebw':'Eff BW','lbl-reuse':'Reuse','lbl-bpt-raw':'Raw BPT','lbl-bpt-eff':'Eff BPT','lbl-ai-streams':'AI Streams',
-  'adeq-ok':function(C,req){return 'Cores sufficient ('+C+' \u2265 '+req+'): adding more cores won\u2019t improve TPS; BW is the ceiling.';},
-  'adeq-low':function(C,req){return 'Cores insufficient ('+C+' < '+req+'): TPS is compute-limited; adding cores directly improves speed.';},
-  'v-fluid':'Smooth','v-ok':'Usable','v-slow':'Slow','v-bad':'Unusable',
-  'v-fast':'Fast','v-acc':'Acceptable','v-lag':'Sluggish','v-tooslow':'Too slow','pre-simp':'Simplified',
-  'w-avx':function(pre,fast){return 'Prefill '+pre+'s \u2192 switch to AVX-512 to reduce to '+fast+'s';},
-  'w-tps':'TPS < 1 \u2192 model too large or BW insufficient; consider a smaller model or better platform',
-  'w-ram':function(g){return 'RAM is tight; consider next DIMM tier ('+g+' GB)';},
-  'w-comp':'Compute-Bound: adding cores scales TPS linearly; BW headroom available',
-  'rec-mem-title':'Optimization (Memory-Bound)','rec-comp-title':'Optimization (Compute-Bound)','rec-hyb-title':'Optimization (Hybrid Zone)',
-  'rec-mem':function(req){
-    var recs=['↑ Add memory channels (2ch → 4ch → 8ch)','↑ Upgrade memory speed (DDR5-5600 → 6400 → 8800)','↓ Use smaller quantization (Q4_K_M → Q3_K_M) to reduce BPT'];
-    var p=PRESETS[curPresetIdx];
-    if(p.devs.igpu||p.devs.npu) recs.push('→ Switch to iGPU/NPU to dramatically reduce effective BPT via reuse');
-    recs.push('→ Adding cores won\u2019t help; C already exceeds C_required='+req);
-    return recs;
-  },
-  'rec-hyb':function(){return['→ Near transition point; both directions yield marginal gains','↑ BW +20% or Core +20% each improve TPS by ~15\u201320%','Ensure --threads equals physical core count'];},
-  'rec-comp':function(C,req){return['↑ Use a platform with more cores (current '+C+' < required '+req+')','↑ Upgrade AVX2 → AVX-512 (tpc 12 → 45 GB/s)','→ Upgrading memory BW has limited effect; compute is the bottleneck'];}
-};
+var GPUS=[
+ {id:'rtx3060', name:'RTX 3060 12GB',    vram:12, vbw:360},
+ {id:'rtx4060', name:'RTX 4060 8GB',     vram:8,  vbw:272},
+ {id:'rtx4060ti',name:'RTX 4060 Ti 16GB',vram:16, vbw:288},
+ {id:'rtx4070', name:'RTX 4070 12GB',    vram:12, vbw:504},
+ {id:'rtx4080', name:'RTX 4080 16GB',    vram:16, vbw:717},
+ {id:'rtx4090', name:'RTX 4090 24GB',    vram:24, vbw:1008},
+ {id:'rtx5060ti',name:'RTX 5060 Ti 16GB',vram:16, vbw:448},
+ {id:'rtx5070', name:'RTX 5070 12GB',    vram:12, vbw:672},
+ {id:'rtx5080', name:'RTX 5080 16GB',    vram:16, vbw:960},
+ {id:'rtx5090', name:'RTX 5090 32GB',    vram:32, vbw:1792},
+ {id:'a770',    name:'Arc A770 16GB',    vram:16, vbw:560},
+ {id:'b580',    name:'Arc B580 12GB',    vram:12, vbw:456},
+ {id:'proB50',  name:'Arc Pro B50 16GB', vram:16, vbw:224},
+ {id:'proB60',  name:'Arc Pro B60 24GB', vram:24, vbw:456}
+];
 
+/* kv = MB per token @ FP16 KV (2 x layers x kv_heads x head_dim x 2B) */
+var MODELS=[
+ {id:'l1b',   name:'Llama-3.2-1B',              P:1.24, ap:null, kv:0.031, q:'INT4'},
+ {id:'l3b',   name:'Llama-3.2-3B',              P:3.21, ap:null, kv:0.109, q:'INT4'},
+ {id:'q4b',   name:'Qwen3-4B',                  P:4.02, ap:null, kv:0.141, q:'INT4'},
+ {id:'q8b',   name:'Qwen3-8B',                  P:8.19, ap:null, kv:0.141, q:'INT4'},
+ {id:'q14b',  name:'Qwen3-14B',                 P:14.8, ap:null, kv:0.156, q:'INT4'},
+ {id:'q32b',  name:'Qwen3-32B',                 P:32.8, ap:null, kv:0.250, q:'INT4'},
+ {id:'q30moe',name:'Qwen3-30B-A3B (MoE)',       P:30.5, ap:3.3,  kv:0.094, q:'INT4'},
+ {id:'m7b',   name:'Mistral-7B',                P:7.25, ap:null, kv:0.125, q:'INT4'},
+ {id:'phi4m', name:'Phi-4-mini 3.8B',           P:3.84, ap:null, kv:0.125, q:'INT4'},
+ {id:'ds15b', name:'DeepSeek-R1-Distill 1.5B',  P:1.78, ap:null, kv:0.027, q:'INT4'},
+ {id:'ds8b',  name:'DeepSeek-R1-Distill 8B',    P:8.03, ap:null, kv:0.125, q:'INT4'},
+ {id:'oss20b',name:'GPT-OSS-20B (MoE)',         P:20.9, ap:3.6,  kv:0.047, q:'MXFP4'},
+ {id:'custom',name:'',                          P:8,    ap:null, kv:0.13,  q:'INT4'}
+];
+
+var L_CHOICES=[1024,4096,8192,16384,32768,65536];
+var UTIL_CPU={avx2:0.50, avx512:0.65};
+var FLOPS={avx2:0.25e12, avx512:1.5e12};
+var DGPU_UTIL=0.70, DGPU_FTL=15;
+
+/* ===================== I18N ===================== */
+var ZH={
+ 'topbar-sub':'CPU · iGPU · NPU · dGPU 統一估算',
+ 'layer-wiz':'精靈','layer-adv':'進階','download-btn':'↓ 下載報告',
+ 'wz-s1':'選機器','wz-s2':'選模型','wz-platform':'平台','wz-model':'模型',
+ 'wz-igpu-u':'iGPU util','wz-npu-u':'NPU util',
+ 'q-label':'量化格式','l-label':'上下文長度 L',
+ 'cmp-title':'對比第二台',
+ 'opt-none':'（無）','opt-custom':'自訂平台（未發布平台用這裡）','opt-custom-model':'自訂參數量',
+ 'sh-model':'模型與量化','sh-hw':'硬體參數','sh-parallel':'並行裝置估算','sh-cpu-detail':'CPU 詳細分析','sh-rec':'優化建議',
+ 'sh-params':'參數速查','sh-theory':'理論依據 v5.0',
+ 'lbl-P':'模型參數 P','moe-label':'MoE 模式','moe-active-lbl':'Active P',
+ 'lbl-L':'上下文長度 L（tokens）','lbl-BW':'記憶體頻寬 BW','lbl-C':'CPU 核心數 C','lbl-simd':'SIMD 能力',
+ 'lbl-uI':'iGPU 利用率 util','lbl-uN':'NPU 利用率 util',
+ 'bw-hint':'選平台自動帶入，手動調整視為自訂',
+ 'adeq-req-lbl':'需要','adeq-cur-lbl':'實際',
+ 'pt-sym':'符號','pt-def':'定義','pt-dflt':'預設／範圍','pv-auto':'自動','pv-result':'結果',
+ 'pd-P':'模型參數量／MoE 每 token 活躍參數量','pd-Q':'量化係數（bytes / param）',
+ 'pd-BW':'系統記憶體頻寬（dGPU 為 VRAM 頻寬）','pd-util':'裝置頻寬利用率（校準常數，依平台家族與裝置）',
+ 'pd-sizef':'模型大小修正：<2.5B ×0.92 · 2.5–6B ×1.0 · >6B ×1.12','pd-L':'上下文長度（tokens）',
+ 'pd-kv':'每 token KV cache 大小（GQA/MLA 架構決定，模型 preset 帶入）',
+ 'pd-tps':'decode 速度 = BW × util × sizeF / model_bytes',
+ 'pd-ftl':'首字延遲 = ftl_coeff × P × (L/1024)，CPU 用 2PL/FLOPS',
+ 'pd-ram':'P×Q×1.05 + KV(L) + 2 GB 執行時開銷',
+ 'th-core':'核心公式','tp-core':'Decode 對所有裝置都是記憶體頻寬瓶頸：每產生一個 token，全部活躍權重都要從記憶體讀一次。CPU / iGPU / NPU 打的是同一條 DRAM 匯流排，差異只在利用率 util——這是 v5 對 v4 reuse 體系的修正：共享記憶體平台上 NPU 不會因「重複利用」而超越頻寬上限。',
+ 'th-util':'util 校準係數','tp-util':'util 是半經驗校準常數，依平台家族與裝置各自標定，範圍 0.31–0.87。新世代平台的 iGPU 與 NPU 利用率顯著高於前代；U 系列因功耗限制較 H 系列低約三成。標「校準」代表該家族有實測基礎；標「外推」代表僅由規格推算。',
+ 'th-dev':'裝置','th-range':'util 範圍',
+ 'th-ftl':'首字延遲 FTL','tp-ftl':'Prefill 是計算瓶頸，與 decode 完全不同。coeff（ms/B，1k 輸入基準）依裝置與世代標定：新世代 iGPU 約 45–65，前代約 290–630；NPU 在新世代約 190，前代約 650——NPU 的 prefill 到最新世代才真正可用。CPU 沿用 2PL/FLOPS。',
+ 'th-npu':'NPU Runtime 成熟度','tp-npu':'硬體能力 ≠ 可得性能。NPU 的 LLM 支援依 runtime 生態（驅動、編譯器、框架）差異極大：標「成熟」代表該世代 NPU 已可穩定接近 iGPU 水準；標「實驗性」代表 decode 約為 iGPU 的五到七成、prefill 明顯落後，採購決策不應以 NPU 數字為準。',
+ 'th-dgpu':'dGPU 模型','tp-dgpu':'dGPU decode 由 VRAM 頻寬主導。模型＋KV 塞不進 VRAM 時進入 offload 情境——該區誤差可達 2–3 倍，本工具只給警告不給數字。',
+ 'th-kv':'KV Cache（GQA-aware）','tp-kv':'kv_per_token 由模型架構（層數 × KV heads × head_dim）決定，模型 preset 自動帶入；不同架構同參數量可差十倍。KV 計入 RAM/VRAM 需求，decode 時 KV 讀取流量併入 model_bytes。',
+ 'th-err':'誤差來源與適用範圍','th-src':'誤差來源','th-impact':'影響',
+ 'tc-util-err':'util 常數偏差','tc-runtime':'runtime 版本差異','tc-quant':'量化實作差異','tc-thermal':'散熱／功耗牆','tc-terr':'總誤差目標',
+ 'th-scope-ok':'✓ 適用範圍','tp-scope-ok':'單機 CPU / iGPU / NPU / dGPU 的 decode 與 prefill 估算。稠密模型與 MoE。L ≤ 64k。已收錄平台家族內的 SKU 內插，以及自訂頻寬的外推。',
+ 'th-scope-no':'✗ 不適用範圍','tp-scope-no':'多節點分散式推論。VRAM 不足的 offload 吞吐數字。跨陣營 NPU 對比。Batch serving 吞吐最佳化。投機解碼等 runtime 加速技術。',
+ 'disc-head':'使用限制與但書',
+ 'disc-body':'本工具為 semi-empirical 工程估算器：以公開規格＋校準常數推算，非實測保證。「校準」精度目標 ±15%，「外推」±25%。實際效能受 runtime 版本、驅動、散熱設計、記憶體時序影響。採購決策請以實機驗證為最終依據。',
+ 'd-cpu':'CPU','d-igpu':'iGPU','d-npu':'NPU','d-dgpu':'dGPU',
+ 'hint-cpu':'通用','hint-igpu':'內顯','hint-npu':'AI 加速器','hint-dgpu':'獨立顯卡',
+ 'v-smooth':'流暢','v-usable':'可用','v-slow':'緩慢','v-bad':'不可用',
+ 'conf-cal':'校準','conf-est':'外推','npu-ok':'runtime 成熟','npu-exp':'runtime 實驗性',
+ 'na-nodev':'此平台無此裝置','na-vram':'VRAM 不足<br>模型+KV 需 {n} GB > {v} GB<br>offload 誤差大，不提供數字','na-sel':'未選擇 dGPU',
+ 'ftl-lbl':'首字延遲','ram-model':'模型','ram-kv':'KV cache','ram-total':'RAM 需求','vram-total':'VRAM 需求',
+ 'w-ftl-npu':'注意：此世代 NPU 首字延遲明顯偏高，互動情境建議用 iGPU',
+ 'w-tps-low':'所有裝置 TPS < 5：模型過大或頻寬不足，建議縮小模型/量化或升級平台',
+ 'cmp-metric':'指標','cmp-none':'（不對比）',
+ 'adeq-ok':function(C,req){return 'Core 充足（'+C+' ≥ '+req+'）：再加 core 無法提升 CPU TPS，BW 是上限。';},
+ 'adeq-low':function(C,req){return 'Core 不足（'+C+' < '+req+'）：CPU TPS 受 compute 限制，加 core 直接提升速度。';},
+ 'rec-title':'優化方向',
+ 'rec-mem':['↑ 增加記憶體通道或速率（頻寬是 decode 上限）','↓ 縮小量化（INT8 → INT4 / MXFP4）直接提升 TPS','→ 新世代平台的 iGPU/NPU 利用率顯著較高'],
+ 'rec-comp':['↑ 增加 CPU 核心數（目前 compute-bound）','↑ AVX2 → AVX-512 平台可大幅改善','→ 或改用 iGPU/dGPU 執行 decode'],
+ 'custom-name':'自訂平台'
+};
+var EN={
+ 'topbar-sub':'Unified CPU · iGPU · NPU · dGPU estimation',
+ 'layer-wiz':'Wizard','layer-adv':'Advanced','download-btn':'↓ Download Report',
+ 'wz-s1':'Pick a machine','wz-s2':'Pick a model','wz-platform':'Platform','wz-model':'Model',
+ 'wz-igpu-u':'iGPU util','wz-npu-u':'NPU util',
+ 'q-label':'Quantization','l-label':'Context Length L',
+ 'cmp-title':'Compare with',
+ 'opt-none':'(none)','opt-custom':'Custom platform (for unreleased parts)','opt-custom-model':'Custom param count',
+ 'sh-model':'Model & Quantization','sh-hw':'Hardware','sh-parallel':'Parallel Device Estimation','sh-cpu-detail':'CPU Detail','sh-rec':'Recommendations',
+ 'sh-params':'Parameter Reference','sh-theory':'Theory v5.0',
+ 'lbl-P':'Model Params P','moe-label':'MoE Mode','moe-active-lbl':'Active P',
+ 'lbl-L':'Context Length L (tokens)','lbl-BW':'Memory BW','lbl-C':'CPU Cores C','lbl-simd':'SIMD',
+ 'lbl-uI':'iGPU utilization','lbl-uN':'NPU utilization',
+ 'bw-hint':'Auto-filled by platform; manual edits act as custom',
+ 'adeq-req-lbl':'Required','adeq-cur-lbl':'Actual',
+ 'pt-sym':'Symbol','pt-def':'Definition','pt-dflt':'Default / Range','pv-auto':'auto','pv-result':'result',
+ 'pd-P':'Model params / MoE active params per token','pd-Q':'Quantization factor (bytes/param)',
+ 'pd-BW':'System memory bandwidth (VRAM BW for dGPU)','pd-util':'Device bandwidth utilization (calibrated constant per family & device)',
+ 'pd-sizef':'Size factor: <2.5B ×0.92 · 2.5–6B ×1.0 · >6B ×1.12','pd-L':'Context length (tokens)',
+ 'pd-kv':'KV cache per token (set by model architecture: GQA/MLA)',
+ 'pd-tps':'Decode rate = BW × util × sizeF / model_bytes',
+ 'pd-ftl':'First-token latency = ftl_coeff × P × (L/1024); CPU uses 2PL/FLOPS',
+ 'pd-ram':'P×Q×1.05 + KV(L) + 2 GB runtime overhead',
+ 'th-core':'Core Formula','tp-core':'Decode is memory-bandwidth-bound on every device: all active weights must be read once per generated token. CPU / iGPU / NPU share the same DRAM bus — the only difference is utilization. This is v5’s correction of the v4 reuse system: on shared-memory platforms an NPU cannot exceed the bandwidth ceiling via “reuse”.',
+ 'th-util':'Calibrated util Constants','tp-util':'util is a semi-empirical calibrated constant per platform family and device, ranging 0.31–0.87. Newer-generation iGPUs and NPUs achieve significantly higher utilization; U-series parts run ~30% below H-series due to power limits. “Calibrated” means the family has a measured basis; “extrapolated” means spec-derived only.',
+ 'th-dev':'Device','th-range':'util range',
+ 'th-ftl':'First Token Latency','tp-ftl':'Prefill is compute-bound and entirely separate from decode. coeff (ms/B at 1k input) is set per device and generation: latest-gen iGPU ≈ 45–65, prior gens ≈ 290–630; NPU ≈ 190 on the latest generation vs ≈ 650 before — NPU prefill only became viable on the newest parts. CPU keeps 2PL/FLOPS.',
+ 'th-npu':'NPU Runtime Maturity','tp-npu':'Hardware capability ≠ attainable performance. NPU LLM support varies drastically with the runtime ecosystem. “Mature”: the NPU generation reliably approaches iGPU level. “Experimental”: decode is ~50–70% of iGPU and prefill lags badly — do not base purchasing decisions on NPU numbers.',
+ 'th-dgpu':'dGPU Model','tp-dgpu':'dGPU decode is VRAM-bandwidth-bound. When model + KV exceed VRAM the workload enters offload territory where errors reach 2–3× — this tool shows a warning instead of a number.',
+ 'th-kv':'KV Cache (GQA-aware)','tp-kv':'kv_per_token is set by model architecture (layers × KV heads × head_dim), auto-filled by the model preset; same-size models can differ 10×. KV counts toward RAM/VRAM and its read traffic adds to decode bytes.',
+ 'th-err':'Error Sources & Scope','th-src':'Source','th-impact':'Impact',
+ 'tc-util-err':'util constant deviation','tc-runtime':'Runtime version variance','tc-quant':'Quantization implementation','tc-thermal':'Thermal / power limits','tc-terr':'Total error target',
+ 'th-scope-ok':'✓ Applicable','tp-scope-ok':'Single-node CPU / iGPU / NPU / dGPU decode & prefill estimation. Dense and MoE models. L ≤ 64k. SKU interpolation within covered families, plus custom-bandwidth extrapolation.',
+ 'th-scope-no':'✗ Not applicable','tp-scope-no':'Multi-node distributed inference. Offload throughput numbers when VRAM is insufficient. Cross-vendor NPU comparison. Batch-serving throughput optimization. Speculative decoding and similar runtime accelerations.',
+ 'disc-head':'Limitations & Notes',
+ 'disc-body':'This is a semi-empirical engineering estimator: public specs plus calibrated constants, not measured guarantees. Precision target ±15% (calibrated), ±25% (extrapolated). Real performance depends on runtime version, drivers, thermal design and memory timings. Validate on real hardware before purchasing decisions.',
+ 'd-cpu':'CPU','d-igpu':'iGPU','d-npu':'NPU','d-dgpu':'dGPU',
+ 'hint-cpu':'general','hint-igpu':'integrated','hint-npu':'AI accelerator','hint-dgpu':'discrete GPU',
+ 'v-smooth':'Smooth','v-usable':'Usable','v-slow':'Slow','v-bad':'Unusable',
+ 'conf-cal':'calibrated','conf-est':'extrapolated','npu-ok':'runtime mature','npu-exp':'runtime experimental',
+ 'na-nodev':'Not present on this platform','na-vram':'VRAM insufficient<br>model+KV needs {n} GB > {v} GB<br>offload error too large — no number given','na-sel':'No dGPU selected',
+ 'ftl-lbl':'First token','ram-model':'Model','ram-kv':'KV cache','ram-total':'RAM needed','vram-total':'VRAM needed',
+ 'w-ftl-npu':'Note: NPU first-token latency is high on this generation; prefer iGPU for interactive use',
+ 'w-tps-low':'All devices < 5 TPS: model too large or bandwidth too low — shrink model/quant or upgrade platform',
+ 'cmp-metric':'Metric','cmp-none':'(no comparison)',
+ 'adeq-ok':function(C,req){return 'Cores sufficient ('+C+' ≥ '+req+'): more cores won’t raise CPU TPS; BW is the ceiling.';},
+ 'adeq-low':function(C,req){return 'Cores insufficient ('+C+' < '+req+'): CPU TPS is compute-limited; adding cores helps directly.';},
+ 'rec-title':'Optimization',
+ 'rec-mem':['↑ Add memory channels or speed (BW caps decode)','↓ Smaller quantization (INT8 → INT4 / MXFP4) raises TPS directly','→ Newer platform generations achieve much higher iGPU/NPU utilization'],
+ 'rec-comp':['↑ More CPU cores (currently compute-bound)','↑ AVX2 → AVX-512 platforms improve substantially','→ Or run decode on iGPU/dGPU instead'],
+ 'custom-name':'Custom platform'
+};
 var lang='zh';
-function t(key){var v=(lang==='zh'?ZH:EN)[key];return v!==undefined?v:key;}
-
+function t(k){var v=(lang==='zh'?ZH:EN)[k];return v!==undefined?v:k;}
+function applyStatic(){
+  var els=document.querySelectorAll('[data-i18n]');
+  for(var i=0;i<els.length;i++){var v=t(els[i].dataset.i18n);if(typeof v==='string')els[i].innerHTML=v;}
+}
 function setLang(l){
   lang=l;
   document.getElementById('btn-zh').classList.toggle('on',l==='zh');
   document.getElementById('btn-en').classList.toggle('on',l==='en');
   document.documentElement.lang=l==='zh'?'zh-Hant':'en';
-  applyStatic();
-  calc();
-}
-function applyStatic(){
-  var els=document.querySelectorAll('[data-i18n]');
-  for(var i=0;i<els.length;i++){
-    var v=t(els[i].dataset.i18n);
-    if(typeof v==='string') els[i].innerHTML=v;
-  }
+  applyStatic(); buildSelects(); calc();
 }
 
-var curPresetIdx=5;
-var pDiv=document.getElementById('presets');
-for(var pi=0;pi<PRESETS.length;pi++){
-  (function(idx){
-    var d=document.createElement('div');
-    d.className='preset';
-    d.onclick=function(){applyPreset(idx);};
-    var tagHtml=PRESETS[idx].tag?'<span class="ptag">'+PRESETS[idx].tag+'</span>':'';
-    d.innerHTML='<span class="pname">'+PRESETS[idx].name+'</span>'+tagHtml+'<span class="pspec">'+PRESETS[idx].spec+'</span><span class="pbw">'+PRESETS[idx].bw+'</span>';
-    pDiv.appendChild(d);
-  })(pi);
-}
-
-var simd='avx2', curQ=0.5625, curQL='Q4_K_M', curMode='decode', curBatch='b1';
-var isMoE=false;
+/* ===================== STATE ===================== */
+var layer='wiz', curPlatId='388H', curPlat2Id='', curGpuId='', curModelId='q8b', curQ='INT4', curL=4096, simd='avx2', isMoE=false;
 var lastResult=null;
 
-function toggleMoE(){
-  isMoE=document.getElementById('moeCheck').checked;
-  var moeDiv=document.getElementById('moeActive');
-  moeDiv.style.display=isMoE?'flex':'none';
+function setLayer(l){
+  layer=l;
+  document.getElementById('btn-wiz').classList.toggle('on',l==='wiz');
+  document.getElementById('btn-adv').classList.toggle('on',l==='adv');
+  document.getElementById('view-wiz').style.display=(l==='wiz')?'':'none';
+  document.getElementById('view-adv').style.display=(l==='adv')?'':'none';
+  try{localStorage.setItem('llmperf5.layer',l);}catch(e){}
   calc();
 }
 
+/* ===================== BUILD UI ===================== */
+function buildSelects(){
+  var sp=document.getElementById('selPlat'), sp2=document.getElementById('selPlat2');
+  var groups={},order=[];
+  PLATFORMS.forEach(function(p){if(!groups[p.tag]){groups[p.tag]=[];order.push(p.tag);}groups[p.tag].push(p);});
+  function fill(sel,withNone){
+    sel.innerHTML='';
+    if(withNone){var o0=document.createElement('option');o0.value='';o0.textContent=t('cmp-none');sel.appendChild(o0);}
+    order.forEach(function(g){
+      var og=document.createElement('optgroup');og.label=g;
+      groups[g].forEach(function(p){
+        var o=document.createElement('option');o.value=p.id;
+        o.textContent=p.name+' · '+p.bw+' GB/s';
+        og.appendChild(o);
+      });
+      sel.appendChild(og);
+    });
+    if(!withNone){var oc=document.createElement('option');oc.value='custom';oc.textContent=t('opt-custom');sel.appendChild(oc);}
+  }
+  fill(sp,false); fill(sp2,true);
+  sp.value=curPlatId; sp2.value=curPlat2Id;
+
+  var sg=document.getElementById('selGpu');sg.innerHTML='';
+  var g0=document.createElement('option');g0.value='';g0.textContent=t('opt-none');sg.appendChild(g0);
+  GPUS.forEach(function(g){var o=document.createElement('option');o.value=g.id;o.textContent=g.name+' · '+g.vbw+' GB/s';sg.appendChild(o);});
+  sg.value=curGpuId;
+
+  var sm=document.getElementById('selModel');sm.innerHTML='';
+  MODELS.forEach(function(m){
+    var o=document.createElement('option');o.value=m.id;
+    o.textContent=(m.id==='custom')?t('opt-custom-model'):m.name+' · '+m.P+'B';
+    sm.appendChild(o);
+  });
+  sm.value=curModelId;
+
+  ['qpills','qpillsAdv'].forEach(function(id){
+    var d=document.getElementById(id);d.innerHTML='';
+    QUANTS.forEach(function(q){
+      var p=document.createElement('div');p.className='pill'+(q.id===curQ?' on':'');
+      p.innerHTML=q.label+' <span style="font-weight:400;opacity:.6">'+q.si+'</span>';
+      p.onclick=function(){curQ=q.id;buildSelects();calc();};
+      d.appendChild(p);
+    });
+  });
+  var ld=document.getElementById('lpills');ld.innerHTML='';
+  L_CHOICES.forEach(function(l){
+    var p=document.createElement('div');p.className='pill'+(l===curL?' on':'');
+    p.textContent=(l>=1024)?(l/1024)+'k':l;
+    p.onclick=function(){curL=l;document.getElementById('sL').value=l;buildSelects();calc();};
+    ld.appendChild(p);
+  });
+}
+
+function onPlat(){
+  curPlatId=document.getElementById('selPlat').value;
+  document.getElementById('customRow').style.display=(curPlatId==='custom')?'':'none';
+  var p=getPlat();
+  document.getElementById('sBW').value=p.bw;
+  document.getElementById('sC').value=p.c;
+  document.getElementById('sUI').value=p.uI;
+  document.getElementById('sUN').value=p.uN;
+  simd=p.simd;
+  document.getElementById('bAVX2').classList.toggle('on',simd==='avx2');
+  document.getElementById('bAVX512').classList.toggle('on',simd==='avx512');
+  calc();
+}
+function onModel(){
+  curModelId=document.getElementById('selModel').value;
+  var m=getModel();
+  document.getElementById('cP').style.display=(curModelId==='custom')?'':'none';
+  curQ=m.q;
+  isMoE=!!m.ap;
+  document.getElementById('moeCheck').checked=isMoE;
+  document.getElementById('moeActive').style.display=isMoE?'flex':'none';
+  document.getElementById('sP').value=m.P;
+  if(m.ap)document.getElementById('sAP').value=m.ap;
+  buildSelects(); calc();
+}
+function toggleMoE(){
+  isMoE=document.getElementById('moeCheck').checked;
+  document.getElementById('moeActive').style.display=isMoE?'flex':'none';
+  calc();
+}
 function setSIMD(v){
   simd=v;
   document.getElementById('bAVX2').classList.toggle('on',v==='avx2');
   document.getElementById('bAVX512').classList.toggle('on',v==='avx512');
   calc();
 }
-function selQ(el){
-  document.querySelectorAll('#qpills .pill').forEach(function(e){e.classList.remove('on');});
-  el.classList.add('on'); curQ=+el.dataset.q; curQL=el.dataset.ql; calc();
-}
-function selMode(el){
-  document.querySelectorAll('#mode-list .mode-item').forEach(function(e){e.classList.remove('on');});
-  el.classList.add('on'); curMode=el.dataset.m; calc();
-}
-function selBatch(el){
-  document.querySelectorAll('#batch-pills .bpill').forEach(function(e){e.classList.remove('on');});
-  el.classList.add('on'); curBatch=el.dataset.b; calc();
-}
-function applyPreset(i){
-  var p=PRESETS[i]; curPresetIdx=i;
-  document.getElementById('sBW').value=p.bw;
-  document.getElementById('sC').value=p.c;
-  simd=p.simd;
-  document.getElementById('bAVX2').classList.toggle('on',p.simd==='avx2');
-  document.getElementById('bAVX512').classList.toggle('on',p.simd==='avx512');
-  calc();
-}
-function dimm(gb){
-  var s=[16,24,32,48,64,96,128,192,256,384,512,768,1024];
-  for(var i=0;i<s.length;i++){if(s[i]>=gb)return s[i];}
-  return s[s.length-1];
-}
 
-function calcDevice(dev,P,Q,BW,C,L){
-  var preset=PRESETS[curPresetIdx];
-  var devConf=preset.devs[dev];
-  if(!devConf) return null;
-  var dp=DEVICE_PROPS[dev];
-  var kvCoeff=MODE_KV[curMode];
-  var fb=BATCH_FB[curBatch]||1.0;
-  var avx512=(simd==='avx512');
-  var tpc=avx512?45:12;
-
-  // Clock normalization: adjust tpc by CPU boost clock vs 3500 MHz reference
-  if(dev==='cpu'&&preset.mhz){
-    var clkFactor=Math.min(1.5,Math.max(0.6,preset.mhz/3500));
-    tpc=tpc*clkFactor;
+/* ===================== GETTERS ===================== */
+function getPlat(){
+  if(curPlatId==='custom'){
+    var un=+document.getElementById('cUN').value||0;
+    return {id:'custom',name:t('custom-name'),tag:'—',
+      bw:+document.getElementById('cBW').value||100,
+      c:+document.getElementById('cC').value||8,
+      simd:simd,
+      uI:+document.getElementById('cUI').value||0,
+      uN:un,
+      fI:200,fN:400,npu:un>0?'exp':null,conf:'est'};
   }
-
-  var f_seq=1+0.08*Math.log2(Math.max(1,L/128));
-
-  // Per-preset device overrides (invisible — defined in PRESETS data)
-  var devBaseReuse=(devConf.baseReuse!==undefined)?devConf.baseReuse:dp.baseReuse;
-  var devWpf=(devConf.wpf!==undefined)?devConf.wpf:dp.weightPassFactor;
-
-  var reuse=Math.min(12,Math.max(1,devBaseReuse*fb*f_seq));
-  var n_mem=(dev==='cpu')?(avx512?0.69:0.51):dp.baseNMemory;
-  if(curBatch==='b8') n_mem=Math.min(1.05,n_mem+0.03);
-  var bw_use=(dev==='dgpu'&&devConf.bwOvr)?devConf.bwOvr:BW;
-  var eBW=bw_use*n_mem;
-
-  var wt=P*Q*devWpf;
-  var kv=kvCoeff*L*0.000063*P;   // corrected KV coefficient
-  var at=0.05*wt;
-  var bpt_raw=wt+kv+at;
-  var bpt_eff=bpt_raw/reuse;
-  var tps_mem=eBW/bpt_eff;
-  var tps_comp, eta_val, C_req_val;
-  if(dev==='cpu'){
-    var ev=avx512?0.90:0.75, et=avx512?0.85:0.80, em=avx512?0.90:0.85;
-    eta_val=ev*et*em;
-    tps_comp=C*tpc/(P*Q)*eta_val;
-    C_req_val=BW/tpc;
-  } else {
-    tps_comp=(typeof devConf.cTps==='number')?devConf.cTps:9999;
-    eta_val=null; C_req_val=null;
-  }
-  var tps=Math.min(tps_mem,tps_comp);
-  var aiStr=eBW/bpt_raw;
-  var isMemB=(tps_mem<=tps_comp);
-  var isHyb=(Math.abs(tps_mem-tps_comp)/Math.max(tps_mem,tps_comp)<0.15);
-  return {tps:tps,tps_mem:tps_mem,tps_comp:tps_comp,eBW:eBW,bpt_raw:bpt_raw,bpt_eff:bpt_eff,reuse:reuse,aiStr:aiStr,isMemB:isMemB,isHyb:isHyb,eta:eta_val,C_req:C_req_val,n_mem:n_mem};
+  for(var i=0;i<PLATFORMS.length;i++)if(PLATFORMS[i].id===curPlatId)return PLATFORMS[i];
+  return PLATFORMS[0];
 }
+function getPlatById(id){for(var i=0;i<PLATFORMS.length;i++)if(PLATFORMS[i].id===id)return PLATFORMS[i];return null;}
+function getModel(){for(var i=0;i<MODELS.length;i++)if(MODELS[i].id===curModelId)return MODELS[i];return MODELS[0];}
+function getQuant(){for(var i=0;i<QUANTS.length;i++)if(QUANTS[i].id===curQ)return QUANTS[i];return QUANTS[1];}
+function getGpu(){for(var i=0;i<GPUS.length;i++)if(GPUS[i].id===curGpuId)return GPUS[i];return null;}
 
-function renderDevCards(results){
-  var devs=['cpu','igpu','npu','dgpu'];
-  var dnames={cpu:'CPU',igpu:'iGPU',npu:'NPU',dgpu:'dGPU'};
-  var dhints={cpu:t('dev-cpu-hint'),igpu:t('dev-igpu-hint'),npu:t('dev-npu-hint'),dgpu:t('dev-dgpu-hint')};
-  var dcolors={cpu:'var(--text)',igpu:'var(--blue)',npu:'var(--teal)',dgpu:'var(--amber)'};
-  var html='';
-  var devNaKeys={cpu:'dev-na-cpu',igpu:'dev-na-igpu',npu:'dev-na-npu',dgpu:'dev-na-dgpu'};
-  for(var di=0;di<devs.length;di++){
-    var dev=devs[di]; var r=(dev==='dgpu')?null:results[dev];
-    // dGPU always shown as static disabled card
-    if(!r){
-      var naText=t(devNaKeys[dev]).replace(/\n/g,'<br style="margin-top:6px;display:block;content:\'\'">');
-      var naStyle=(dev==='dgpu')?'font-size:12px;color:var(--text3);padding:10px 0;line-height:1.7':'font-size:12px;color:var(--text3);padding:18px 0;text-align:center';
-      html+='<div class="dev-card dis">'+
-        '<div class="dev-head"><span class="dev-name">'+dnames[dev]+'</span><span class="dev-hint">'+dhints[dev]+'</span></div>'+
-        '<div style="'+naStyle+'">'+naText+'</div></div>';
+/* ===================== ENGINE ===================== */
+function sizeF(p){return p<2.5?0.92:(p<=6?1.0:1.12);}
+function engine(plat,P,AP,bpw,L,kvMB,gpu,simdV){
+  var mBytes=P*bpw*1.05;               // GB, full weights (RAM)
+  var aBytes=AP*bpw*1.05;              // GB, active weights per token (traffic)
+  var kvTot=kvMB*L/1024;               // GB
+  var trafGB=aBytes+kvTot*0.05;        // amortized KV read; weights dominate
+  var ram=mBytes+kvTot+2;
+  var sf=sizeF(AP);
+  var out={ram:ram,kv:kvTot,mBytes:mBytes,devices:{cpu:null,igpu:null,npu:null,dgpu:null}};
+
+  /* CPU */
+  var uC=UTIL_CPU[simdV];
+  var tpsMemC=plat.bw*uC*sf/trafGB;
+  var tpc=simdV==='avx512'?45:12;
+  var eta=simdV==='avx512'?0.69:0.51;
+  var tpsCompC=plat.c*tpc/(AP*bpw)*eta;
+  out.devices.cpu={tps:Math.min(tpsMemC,tpsCompC), ftl:2*P*1e9*L/FLOPS[simdV],
+    conf:plat.conf, memB:tpsMemC<=tpsCompC, cReq:plat.bw/tpc};
+  /* iGPU */
+  if(plat.uI>0){
+    out.devices.igpu={tps:plat.bw*plat.uI*sf/trafGB, ftl:plat.fI*P*(L/1024)/1000, conf:plat.conf};
+  }
+  /* NPU */
+  if(plat.uN>0){
+    out.devices.npu={tps:plat.bw*plat.uN*sf/trafGB, ftl:plat.fN*P*(L/1024)/1000, conf:plat.conf, mat:plat.npu};
+  }
+  /* dGPU */
+  if(gpu){
+    var need=mBytes+kvTot+1;
+    if(need<=gpu.vram){
+      out.devices.dgpu={tps:gpu.vbw*DGPU_UTIL*sf/trafGB, ftl:DGPU_FTL*P*(L/1024)/1000, conf:'cal', vneed:need, vram:gpu.vram};
     } else {
-      var regClass=r.isHyb?'vw':r.isMemB?'vg':'vb';
-      var regName=r.isHyb?'Hybrid':r.isMemB?'Mem-Bound':'Comp-Bound';
-      html+='<div class="dev-card">'+
-        '<div class="dev-head">'+
-          '<span class="dev-name" style="color:'+dcolors[dev]+'">'+dnames[dev]+'</span>'+
-          '<span class="dev-hint">'+dhints[dev]+'</span>'+
-        '</div>'+
-        '<div class="dev-result">'+
-          '<span class="vtag '+regClass+'">'+regName+'</span>'+
-          '<span class="dev-tps">'+r.tps.toFixed(1)+'</span>'+
-          '<span class="dev-unit">tok/s</span>'+
-        '</div>'+
-        '<div class="dev-row"><span>'+t('lbl-ebw')+'</span><span class="dev-val">'+r.eBW.toFixed(0)+' GB/s</span></div>'+
-        '<div class="dev-row"><span>'+t('lbl-reuse')+'</span><span class="dev-val">'+r.reuse.toFixed(1)+'\u00d7</span></div>'+
-        '<div class="dev-bpt">'+
-          '<div class="dev-bpt-row"><span class="dev-bpt-lbl">'+t('lbl-bpt-raw')+'</span><span class="dev-bpt-val" style="color:var(--text3)">'+r.bpt_raw.toFixed(2)+'</span></div>'+
-          '<div class="dev-bpt-row"><span class="dev-bpt-lbl">'+t('lbl-bpt-eff')+'</span><span class="dev-bpt-val" style="color:'+dcolors[dev]+'">'+r.bpt_eff.toFixed(2)+'</span></div>'+
-        '</div>'+
-        '<div class="dev-ai"><span class="dev-ai-lbl">'+t('lbl-ai-streams')+'</span><span class="dev-ai-val">'+r.aiStr.toFixed(1)+'</span></div>'+
-        '</div>';
+      out.devices.dgpu={fail:true, vneed:need, vram:gpu.vram};
     }
   }
-  document.getElementById('dev-cards').innerHTML=html;
+  return out;
+}
+function verdict(tps){
+  if(tps>=20)return['vg','v-smooth','✅'];
+  if(tps>=10)return['vg','v-usable','✅'];
+  if(tps>=5)return['vw','v-slow','⚠️'];
+  return['vb','v-bad','❌'];
+}
+function fmtFtl(s){return s>=100?Math.round(s)+'s':s>=10?s.toFixed(0)+'s':s>=1?s.toFixed(1)+'s':Math.round(s*1000)+'ms';}
+
+/* ===================== RENDER ===================== */
+function devCardHTML(dev,r){
+  var names={cpu:t('d-cpu'),igpu:t('d-igpu'),npu:t('d-npu'),dgpu:t('d-dgpu')};
+  var hints={cpu:t('hint-cpu'),igpu:t('hint-igpu'),npu:t('hint-npu'),dgpu:t('hint-dgpu')};
+  var colors={cpu:'var(--text)',igpu:'var(--blue)',npu:'var(--teal)',dgpu:'var(--amber)'};
+  if(!r){
+    var msg=(dev==='dgpu')?t('na-sel'):t('na-nodev');
+    return '<div class="dev-card dis"><div class="dev-head"><span class="dev-name">'+names[dev]+'</span><span class="dev-hint">'+hints[dev]+'</span></div><div class="dev-na">'+msg+'</div></div>';
+  }
+  if(r.fail){
+    var msg2=t('na-vram').replace('{n}',r.vneed.toFixed(1)).replace('{v}',r.vram);
+    return '<div class="dev-card" style="border-color:var(--red2)"><div class="dev-head"><span class="dev-name" style="color:var(--red)">'+names[dev]+'</span><span class="dev-hint">'+hints[dev]+'</span><span class="dev-verdict">❌</span></div><div class="dev-na" style="color:var(--red)">'+msg2+'</div></div>';
+  }
+  var v=verdict(r.tps);
+  var badges='<span class="badge '+r.conf+'">'+t('conf-'+r.conf)+'</span>';
+  if(r.mat)badges+='<span class="badge '+(r.mat==='ok'?'ok':'exp')+'">'+t('npu-'+r.mat)+'</span>';
+  return '<div class="dev-card">'+
+    '<div class="dev-head"><span class="dev-name" style="color:'+colors[dev]+'">'+names[dev]+'</span><span class="dev-hint">'+hints[dev]+'</span><span class="dev-verdict">'+v[2]+'</span></div>'+
+    '<div class="dev-result"><span class="vtag '+v[0]+'">'+t(v[1])+'</span><span class="dev-tps">'+(r.tps>=100?Math.round(r.tps):r.tps.toFixed(1))+'</span><span class="dev-unit">tok/s</span></div>'+
+    '<div class="dev-row"><span>'+t('ftl-lbl')+'</span><span class="dev-val">'+fmtFtl(r.ftl)+'</span></div>'+
+    '<div class="badges">'+badges+'</div></div>';
+}
+function renderCards(elId,res){
+  var html='';
+  ['cpu','igpu','npu','dgpu'].forEach(function(d){html+=devCardHTML(d,res.devices[d]);});
+  document.getElementById(elId).innerHTML=html;
+}
+function renderRam(elId,res,gpu){
+  var h='<div class="ram-item"><span class="ram-lbl">'+t('ram-model')+'</span><span class="ram-val" style="color:var(--text)">'+res.mBytes.toFixed(1)+' GB</span></div>'+
+        '<div class="ram-item"><span class="ram-lbl">'+t('ram-kv')+'</span><span class="ram-val" style="color:var(--text)">'+res.kv.toFixed(1)+' GB</span></div>'+
+        '<div class="ram-item"><span class="ram-lbl">'+t('ram-total')+'</span><span class="ram-val">'+Math.ceil(res.ram)+' GB</span></div>';
+  if(gpu&&res.devices.dgpu){
+    var d=res.devices.dgpu;
+    h+='<div class="ram-item"><span class="ram-lbl">'+t('vram-total')+'</span><span class="ram-val'+(d.fail?' warn':'')+'">'+d.vneed.toFixed(1)+' / '+d.vram+' GB</span></div>';
+  }
+  document.getElementById(elId).innerHTML=h;
 }
 
 function calc(){
-  var P=+document.getElementById('sP').value;
-  var AP=isMoE?+document.getElementById('sAP').value:P;  // Active P for weight traffic
-  var BW=+document.getElementById('sBW').value;
-  var C=+document.getElementById('sC').value;
-  var L=+document.getElementById('sL').value;
-  var Q=curQ;
-  document.getElementById('vP').textContent=P+' B'; document.getElementById('vP').dataset.raw=P;
-  if(isMoE){
-    document.getElementById('vAP').textContent=AP.toFixed(1)+' B';
-    document.getElementById('vAP').dataset.raw=AP;
+  curGpuId=document.getElementById('selGpu').value;
+  curPlat2Id=document.getElementById('selPlat2').value;
+  var plat=getPlat(), m=getModel(), q=getQuant(), gpu=getGpu();
+
+  var P,AP,kvMB,simdUse;
+  if(layer==='adv'){
+    P=+document.getElementById('sP').value;
+    isMoE=document.getElementById('moeCheck').checked;
+    AP=isMoE?+document.getElementById('sAP').value:P;
+    kvMB=m.kv*(P/m.P);
+    curL=+document.getElementById('sL').value;
+    simdUse=simd;
+    plat={id:plat.id,name:plat.name,tag:plat.tag,
+      bw:+document.getElementById('sBW').value, c:+document.getElementById('sC').value, simd:simd,
+      uI:+document.getElementById('sUI').value, uN:+document.getElementById('sUN').value,
+      fI:plat.fI||200,fN:plat.fN||400,npu:plat.npu,conf:plat.conf};
+    syncLabels(P,AP,plat);
+  } else {
+    P=(curModelId==='custom')?(+document.getElementById('cP').value||8):m.P;
+    AP=m.ap||P;
+    kvMB=(curModelId==='custom')?0.13*(P/8):m.kv;
+    simdUse=plat.simd;
   }
-  document.getElementById('vBW').textContent=BW.toFixed(1)+' GB/s'; document.getElementById('vBW').dataset.raw=BW;
-  document.getElementById('vC').textContent=C; document.getElementById('vC').dataset.raw=C;
-  document.getElementById('vL').textContent=L.toLocaleString(); document.getElementById('vL').dataset.raw=L;
 
-  // AP for TPS (weight traffic), P for RAM and Prefill
-  var cpu =calcDevice('cpu', AP,Q,BW,C,L);
-  var igpu=calcDevice('igpu',AP,Q,BW,C,L);
-  var npu =calcDevice('npu', AP,Q,BW,C,L);
-  var dgpu=calcDevice('dgpu',AP,Q,BW,C,L);
-  renderDevCards({cpu:cpu,igpu:igpu,npu:npu,dgpu:dgpu});
+  var res=engine(plat,P,AP,q.bpw,curL,kvMB,gpu,simdUse);
+  lastResult={plat:plat,model:m,P:P,AP:AP,q:q,L:curL,gpu:gpu,res:res};
 
-  var avx512=(simd==='avx512');
-  var tpc=avx512?45:12;
-  var ev=avx512?0.90:0.75, et=avx512?0.85:0.80, em=avx512?0.90:0.85;
-  var eta=ev*et*em;
-  var FLOPS=avx512?1.5e12:0.25e12;
-  var pre=2*P*1e9*L/FLOPS;    // Prefill uses full P
-  var rawRam=P*Q+10;           // RAM uses full P
-  var ram=dimm(Math.ceil(rawRam));
-  var C_req=BW/tpc;
-  var isMemB=cpu?cpu.isMemB:(C>=C_req);
-  var isHyb=cpu?cpu.isHyb:false;
+  /* hints */
+  document.getElementById('platHint').textContent=plat.name+' · '+plat.bw.toFixed(1)+' GB/s · '+plat.c+'C · '+(simdUse||'avx2').toUpperCase();
+  document.getElementById('modelHint').textContent=P+'B'+(AP!==P?' (Active '+AP+'B)':'')+' × '+q.bpw+' B/param ≈ '+res.mBytes.toFixed(1)+' GB · KV@'+(curL>=1024?(curL/1024)+'k':curL)+' ≈ '+res.kv.toFixed(1)+' GB';
 
-  var maxC=Math.max(C,C_req)*1.2;
-  document.getElementById('adeq-req').textContent=C_req.toFixed(1);
-  document.getElementById('adeq-cur').textContent=C;
-  document.getElementById('adeq-req-fill').style.width=Math.min(100,C_req/maxC*100)+'%';
-  document.getElementById('adeq-req-fill').style.background='var(--text3)';
-  document.getElementById('adeq-cur-fill').style.width=Math.min(100,C/maxC*100)+'%';
-  document.getElementById('adeq-cur-fill').style.background=isMemB?'var(--teal)':'var(--amber)';
-  document.getElementById('adeq-verdict').textContent=isMemB?t('adeq-ok')(C,C_req.toFixed(1)):t('adeq-low')(C,C_req.toFixed(1));
-
-  var pV=pre<=10?['vg',t('v-fast')]:pre<=45?['vg',t('v-acc')]:pre<=90?['vw',t('v-lag')]:['vb',t('v-tooslow')];
-  document.getElementById('r-pre').textContent=pre>=100?Math.round(pre)+'s':pre.toFixed(1)+'s';
-  var pv=document.getElementById('r-pre-v'); pv.className='vtag-sm '+pV[0]; pv.textContent=pV[1];
-  var sd=avx512?750:125;
-  document.getElementById('r-pre-d').textContent='2\u00d7'+P+'B\u00d7'+L+'\u00f7'+(avx512?'1.5T':'0.25T')+'\n'+t('pre-simp')+': '+P+'\u00d7'+L+'\u00f7'+sd+'='+(P*L/sd).toFixed(0)+'s';
-  document.getElementById('r-ram').textContent=ram;
-  document.getElementById('r-ram-d').textContent=P+'\u00d7'+Q+'+10='+rawRam.toFixed(1)+' GB\n\u2192 '+ram+' GB DIMM';
-
-  document.getElementById('e-vec').textContent=ev.toFixed(2);
-  document.getElementById('e-thr').textContent=et.toFixed(2);
-  document.getElementById('e-mem').textContent=em.toFixed(2);
-  document.getElementById('e-numa').textContent='1.00';
-  document.getElementById('e-total').textContent=eta.toFixed(3);
-
+  /* wizard */
+  renderCards('wizCards',res);
+  renderRam('ramBar',res,gpu);
   var warns=[];
-  if(!avx512&&pre>60) warns.push(t('w-avx')(pre.toFixed(0),(pre/6).toFixed(0)));
-  if(cpu&&cpu.tps<1) warns.push(t('w-tps'));
-  if(rawRam>ram*0.93) warns.push(t('w-ram')(dimm(ram+1)));
-  if(!isMemB&&!isHyb) warns.push(t('w-comp'));
-  document.getElementById('warnbar').textContent=warns.join('   \u00b7   ');
+  var allLow=true;
+  ['cpu','igpu','npu','dgpu'].forEach(function(d){var r=res.devices[d];if(r&&!r.fail&&r.tps>=5)allLow=false;});
+  if(allLow)warns.push(t('w-tps-low'));
+  if(res.devices.npu&&res.devices.npu.mat==='exp'&&res.devices.npu.ftl>3)warns.push(t('w-ftl-npu'));
+  document.getElementById('wizWarn').textContent=warns.join('   ·   ');
 
-  var recTitle=isMemB?t('rec-mem-title'):isHyb?t('rec-hyb-title'):t('rec-comp-title');
-  document.getElementById('rec-title').textContent=recTitle;
-  var recs=isMemB?t('rec-mem')(C_req.toFixed(1)):isHyb?t('rec-hyb')():t('rec-comp')(C,C_req.toFixed(1));
-  var recHTML='';
-  for(var ri=0;ri<recs.length;ri++){
-    recHTML+='<div class="rec-item"><span class="rec-arrow">'+recs[ri][0]+'</span><span>'+recs[ri].slice(1)+'</span></div>';
-  }
-  document.getElementById('rec-items').innerHTML=recHTML;
+  /* compare */
+  var cz=document.getElementById('cmpZone');
+  var p2=getPlatById(curPlat2Id);
+  if(p2){
+    var res2=engine(p2,P,AP,q.bpw,curL,kvMB,gpu,p2.simd);
+    var rows=[['CPU','cpu'],['iGPU','igpu'],['NPU','npu']];
+    var h='<table class="cmp-table"><thead><tr><th>'+t('cmp-metric')+'</th><th>'+plat.name+'</th><th>'+p2.name+'</th><th>Δ</th></tr></thead><tbody>';
+    rows.forEach(function(rw){
+      var a=res.devices[rw[1]],b=res2.devices[rw[1]];
+      var av=(a&&!a.fail)?a.tps:null, bv=(b&&!b.fail)?b.tps:null;
+      var diff='—';
+      if(av&&bv){var d=(bv-av)/av*100;diff='<span class="cmp-diff'+(d<0?' neg':'')+'">'+(d>=0?'+':'')+d.toFixed(0)+'%</span>';}
+      h+='<tr><td class="k">'+rw[0]+' tok/s</td><td>'+(av?av.toFixed(1):'—')+'</td><td>'+(bv?bv.toFixed(1):'—')+'</td><td>'+diff+'</td></tr>';
+    });
+    var fa=res.devices.igpu?fmtFtl(res.devices.igpu.ftl):'—', fb=res2.devices.igpu?fmtFtl(res2.devices.igpu.ftl):'—';
+    h+='<tr><td class="k">iGPU '+t('ftl-lbl')+'</td><td>'+fa+'</td><td>'+fb+'</td><td>—</td></tr>';
+    h+='</tbody></table>';
+    cz.innerHTML=h;
+  } else cz.innerHTML='';
 
-  lastResult={
-    inputs:{P:P,AP:AP,isMoE:isMoE,Q:Q,QL:curQL,BW:BW,C:C,simd:simd,L:L,mode:curMode,batch:curBatch,preset:PRESETS[curPresetIdx].name},
-    cpu:cpu,igpu:igpu,npu:npu,dgpu:dgpu,
-    prefill:pre,ram:ram,eta:eta,C_req:C_req,isMemB:isMemB,isHyb:isHyb,recs:recs
-  };
+  /* advanced */
+  renderCards('advCards',res);
+  renderRam('ramBarAdv',res,gpu);
+  var cpu=res.devices.cpu;
+  var C=plat.c, Creq=cpu.cReq;
+  var maxC=Math.max(C,Creq)*1.2;
+  document.getElementById('adeq-req').textContent=Creq.toFixed(1);
+  document.getElementById('adeq-cur').textContent=C;
+  document.getElementById('adeq-req-fill').style.width=Math.min(100,Creq/maxC*100)+'%';
+  document.getElementById('adeq-cur-fill').style.width=Math.min(100,C/maxC*100)+'%';
+  document.getElementById('adeq-cur-fill').style.background=cpu.memB?'var(--teal)':'var(--amber)';
+  document.getElementById('adeq-verdict').textContent=cpu.memB?t('adeq-ok')(C,Creq.toFixed(1)):t('adeq-low')(C,Creq.toFixed(1));
+  document.getElementById('rec-title').textContent=t('rec-title');
+  var recs=cpu.memB?t('rec-mem'):t('rec-comp');
+  var rh='';recs.forEach(function(r){rh+='<div class="rec-item"><span class="rec-arrow">'+r[0]+'</span><span>'+r.slice(1)+'</span></div>';});
+  document.getElementById('rec-items').innerHTML=rh;
+
+  writeURL();
+}
+function syncLabels(P,AP,plat){
+  function set(id,txt,raw){var el=document.getElementById(id);if(!el.classList.contains('editing')){el.textContent=txt;el.dataset.raw=raw;}}
+  set('vP',P+' B',P);
+  set('vAP',AP.toFixed(1)+' B',AP);
+  set('vBW',plat.bw.toFixed(1)+' GB/s',plat.bw);
+  set('vC',plat.c,plat.c);
+  set('vL',(+curL).toLocaleString(),curL);
+  set('vUI',(+plat.uI).toFixed(2),plat.uI);
+  set('vUN',(+plat.uN).toFixed(2),plat.uN);
 }
 
+/* ===================== URL STATE ===================== */
+function writeURL(){
+  try{
+    var p=new URLSearchParams();
+    p.set('p',curPlatId);if(curPlat2Id)p.set('p2',curPlat2Id);
+    if(curGpuId)p.set('g',curGpuId);
+    p.set('m',curModelId);p.set('q',curQ);p.set('L',curL);
+    history.replaceState(null,'','?'+p.toString());
+  }catch(e){}
+}
+function readURL(){
+  try{
+    var p=new URLSearchParams(location.search);
+    if(p.get('p'))curPlatId=p.get('p');
+    if(p.get('p2'))curPlat2Id=p.get('p2');
+    if(p.get('g'))curGpuId=p.get('g');
+    if(p.get('m'))curModelId=p.get('m');
+    if(p.get('q'))curQ=p.get('q');
+    if(p.get('L'))curL=+p.get('L');
+  }catch(e){}
+}
+
+/* ===================== REPORT ===================== */
 function downloadReport(){
-  if(!lastResult) return;
-  var r=lastResult; var isZh=(lang==='zh');
-  var nl='\n'; var s1='='.repeat(56); var s2='-'.repeat(40);
-  var L=[];
-  L.push('LLM '+(isZh?'推論效能報告':'Inference Performance Report'));
+  if(!lastResult)return;
+  var r=lastResult,isZh=(lang==='zh');
+  var s1='='.repeat(56),s2='-'.repeat(40),L=[];
+  L.push('LLM '+(isZh?'推論效能報告':'Inference Performance Report')+' · v5.0');
   L.push((isZh?'生成時間':'Generated')+': '+new Date().toLocaleString());
-  L.push((isZh?'平台預設':'Platform')+': '+r.inputs.preset);
   L.push(s1);
-  L.push(isZh?'輸入參數':'Input Parameters'); L.push(s2);
-  L.push('  '+(isZh?'模型參數 P':'Model Params P')+'   : '+r.inputs.P+' B'+(r.inputs.isMoE?' (MoE, Active: '+r.inputs.AP+'B)':''));
-  L.push('  '+(isZh?'量化格式 Q':'Quantization Q')+'   : '+r.inputs.QL+' ('+r.inputs.Q+')');
-  L.push('  '+(isZh?'記憶體頻寬':'Memory BW')+'      : '+r.inputs.BW.toFixed(1)+' GB/s');
-  L.push('  Core Count C   : '+r.inputs.C);
-  L.push('  SIMD           : '+r.inputs.simd.toUpperCase());
-  L.push('  '+(isZh?'輸入長度 L':'Input Length L')+' : '+r.inputs.L+' tokens');
-  L.push('  '+(isZh?'推論模式':'Runtime Mode')+' : '+r.inputs.mode);
-  L.push('  '+(isZh?'批次大小':'Batch Size')+' : '+r.inputs.batch);
-  L.push('');
-  L.push(isZh?'並行裝置估算':'Parallel Device Estimation'); L.push(s2);
-  var devs=['cpu','igpu','npu','dgpu']; var dlbls=['CPU ','iGPU','NPU ','dGPU'];
-  function pad(s,w){s=String(s);while(s.length<w)s=s+' ';return s;}
-  L.push('  '+pad('Metric',18)+dlbls.map(function(d){return pad(d,12);}).join(''));
-  var metrics=[
-    ['TPS (tok/s)',  function(d){return d?d.tps.toFixed(1):'—';}],
-    ['Regime',       function(d){return d?(d.isHyb?'Hybrid':d.isMemB?'Mem-Bound':'Comp-Bound'):'—';}],
-    ['EBW (GB/s)',   function(d){return d?d.eBW.toFixed(0):'—';}],
-    ['Raw BPT (GB)', function(d){return d?d.bpt_raw.toFixed(2):'—';}],
-    ['Eff BPT (GB)', function(d){return d?d.bpt_eff.toFixed(2):'—';}],
-    ['Reuse',        function(d){return d?d.reuse.toFixed(1)+'\u00d7':'—';}],
-    ['AI Streams',   function(d){return d?d.aiStr.toFixed(1):'—';}]
-  ];
-  metrics.forEach(function(m){
-    var row='  '+pad(m[0],18);
-    devs.forEach(function(dev){row+=pad(m[1](r[dev]),12);});
-    L.push(row);
+  L.push((isZh?'平台':'Platform')+': '+r.plat.name+' ('+r.plat.tag+') · '+r.plat.bw.toFixed(1)+' GB/s · '+r.plat.c+'C');
+  if(r.gpu)L.push('dGPU: '+r.gpu.name+' · '+r.gpu.vbw+' GB/s · '+r.gpu.vram+' GB');
+  L.push((isZh?'模型':'Model')+': '+(r.model.id==='custom'?r.P+'B':r.model.name)+' · '+r.q.label+(r.AP!==r.P?' · Active '+r.AP+'B':''));
+  L.push('L = '+r.L+' tokens');
+  L.push(s2);
+  var dl={cpu:'CPU ',igpu:'iGPU',npu:'NPU ',dgpu:'dGPU'};
+  ['cpu','igpu','npu','dgpu'].forEach(function(d){
+    var v=r.res.devices[d];if(!v)return;
+    if(v.fail){L.push('  '+dl[d]+' : VRAM insufficient ('+v.vneed.toFixed(1)+' > '+v.vram+' GB)');return;}
+    L.push('  '+dl[d]+' : '+v.tps.toFixed(1)+' tok/s · FTL '+fmtFtl(v.ftl)+' · '+t('conf-'+v.conf)+(v.mat?' · '+t('npu-'+v.mat):''));
   });
-  L.push('');
-  L.push(isZh?'CPU 詳細分析':'CPU Detail'); L.push(s2);
-  L.push('  Prefill     : '+(r.prefill>=100?Math.round(r.prefill):r.prefill.toFixed(1))+'s');
-  L.push('  '+(isZh?'RAM 最低':'RAM Min')+' : '+r.ram+' GB (DIMM)');
-  L.push('  \u03b7 Total   : '+r.eta.toFixed(3));
-  L.push('  C_required  : '+r.C_req.toFixed(1));
-  L.push('  Regime      : '+(r.isHyb?'Hybrid':r.isMemB?'Memory-Bound':'Compute-Bound'));
-  L.push('');
-  L.push(isZh?'優化建議':'Recommendations'); L.push(s2);
-  r.recs.forEach(function(rec){L.push('  '+rec);});
-  L.push(''); L.push(s1);
-  L.push('Tool: v4.0 \u00b7 LLM Perf Model');
-  L.push((isZh?'精度目標':'Precision')+': \u00b115% CPU, \u00b125% GPU/NPU (semi-empirical)');
-  var blob=new Blob([L.join(nl)],{type:'text/plain;charset=utf-8'});
+  L.push(s2);
+  L.push((isZh?'RAM 需求':'RAM needed')+': '+Math.ceil(r.res.ram)+' GB ('+(isZh?'含':'incl.')+' KV '+r.res.kv.toFixed(1)+' GB)');
+  L.push(s1);
+  L.push('Tool: LLM Perf Model v5.0 · semi-empirical');
+  L.push(isZh?'精度目標: ±15%（校準）/ ±25%（外推）':'Precision: ±15% (calibrated) / ±25% (extrapolated)');
+  var blob=new Blob([L.join('\n')],{type:'text/plain;charset=utf-8'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
-  a.href=url; a.download='llm_perf_'+new Date().toISOString().slice(0,10)+'.txt';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  a.href=url;a.download='llm_perf_'+new Date().toISOString().slice(0,10)+'.txt';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 
+/* ===================== INLINE EDIT ===================== */
 function startEdit(span){
-  if(span.querySelector('input')) return;
+  if(span.querySelector('input'))return;
   var slider=document.getElementById(span.dataset.slider);
   span.classList.add('editing');
   var input=document.createElement('input');
-  input.type='text'; input.className='sb-edit'; input.value=span.dataset.raw;
-  span.textContent=''; span.appendChild(input); input.focus(); input.select();
+  input.type='text';input.className='sb-edit';input.value=span.dataset.raw;
+  span.textContent='';span.appendChild(input);input.focus();input.select();
   function commit(){
     var val=parseFloat(input.value.replace(/[^0-9.]/g,''));
     if(!isNaN(val)){var cl=Math.min(+slider.max,Math.max(+slider.min,val));slider.value=cl;span.dataset.raw=cl;}
     span.classList.remove('editing');
-    if(span.contains(input)) span.removeChild(input);
+    if(span.contains(input))span.removeChild(input);
     calc();
   }
   input.addEventListener('blur',commit);
   input.addEventListener('keydown',function(e){
-    if(e.key==='Enter'){input.blur();}
+    if(e.key==='Enter')input.blur();
     if(e.key==='Escape'){span.classList.remove('editing');if(span.contains(input))span.removeChild(input);calc();}
   });
   input.addEventListener('click',function(e){e.stopPropagation();});
 }
 
+/* ===================== INIT ===================== */
+readURL();
+try{var sl=localStorage.getItem('llmperf5.layer');if(sl)layer=sl;}catch(e){}
 applyStatic();
-calc();
+buildSelects();
+document.getElementById('selPlat').value=curPlatId;
+document.getElementById('selGpu').value=curGpuId;
+document.getElementById('selModel').value=curModelId;
+document.getElementById('selPlat2').value=curPlat2Id;
+onModel();
+onPlat();
+setLayer(layer);
 </script>
 </body>
 </html>
