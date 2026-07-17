@@ -340,12 +340,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <tbody>
         <tr><td class="sym">P / AP</td><td class="def" data-i18n="pd-P">模型參數量／MoE 每 token 活躍參數量</td><td class="dflt">0.5–235 B</td></tr>
         <tr><td class="sym">Q</td><td class="def" data-i18n="pd-Q">量化係數（bytes / param）</td><td class="dflt">MXFP4=0.53 … FP16=2.0</td></tr>
-        <tr><td class="sym">BW</td><td class="def" data-i18n="pd-BW">系統記憶體頻寬（dGPU 為 VRAM 頻寬）</td><td class="dflt">10–700 GB/s</td></tr>
+        <tr><td class="sym">BW</td><td class="def" data-i18n="pd-BW">系統記憶體頻寬（dGPU 為 VRAM 頻寬）</td><td class="dflt">10–700 · dGPU 160–1792 GB/s</td></tr>
         <tr><td class="sym">util</td><td class="def" data-i18n="pd-util">裝置頻寬利用率（校準常數，依平台家族與裝置）</td><td class="dflt">0.31–0.87</td></tr>
+        <tr><td class="sym">tpc / C_req</td><td class="def" data-i18n="pd-tpc">CPU compute 路徑：每核心頻寬供給 12（AVX2）／45（AVX-512）GB/s；C_req = BW ÷ tpc，低於即 compute-bound</td><td class="dflt" data-i18n="pv-auto">自動</td></tr>
         <tr><td class="sym">sizeF</td><td class="def" data-i18n="pd-sizef">模型大小修正：&lt;2.5B ×0.92 · 2.5–6B ×1.0 · &gt;6B ×1.12</td><td class="dflt" data-i18n="pv-auto">自動</td></tr>
         <tr><td class="sym">L</td><td class="def" data-i18n="pd-L">上下文長度（tokens）</td><td class="dflt">512–65,536</td></tr>
-        <tr><td class="sym">KV/tok</td><td class="def" data-i18n="pd-kv">每 token KV cache 大小（GQA/MLA 架構決定，模型 preset 帶入）</td><td class="dflt">0.03–0.26 MB</td></tr>
-        <tr><td class="sym">TPS</td><td class="def" data-i18n="pd-tps">decode 速度 = BW × util × sizeF / model_bytes</td><td class="dflt" data-i18n="pv-result">結果</td></tr>
+        <tr><td class="sym">KV/tok</td><td class="def" data-i18n="pd-kv">每 token KV cache 大小（GQA/MLA 架構決定，模型 preset 帶入）</td><td class="dflt">0.03–0.25 MB</td></tr>
+        <tr><td class="sym">TPS</td><td class="def" data-i18n="pd-tps">decode 速度 = BW × util × sizeF / (active 權重 + KV 讀取)</td><td class="dflt" data-i18n="pv-result">結果</td></tr>
         <tr><td class="sym">FTL</td><td class="def" data-i18n="pd-ftl">首字延遲 = ftl_coeff × P × (L/1024)，CPU 用 2PL/FLOPS</td><td class="dflt" data-i18n="pv-result">結果</td></tr>
         <tr><td class="sym">RAM</td><td class="def" data-i18n="pd-ram">P×Q×1.05 + KV(L) + 2 GB 執行時開銷</td><td class="dflt" data-i18n="pv-result">結果</td></tr>
       </tbody>
@@ -357,7 +358,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <div class="theory-grid">
       <div class="theory">
         <h3 data-i18n="th-core">核心公式</h3>
-        <code class="eq">TPS = <span class="hi">BW × util × sizeF</span> / model_bytes</code>
+        <code class="eq">TPS = <span class="hi">BW × util × sizeF</span> / traffic<br>traffic = active_weights + KV(L)</code>
         <p data-i18n="tp-core">Decode 對所有裝置都是記憶體頻寬瓶頸：每產生一個 token，全部活躍權重都要從記憶體讀一次。CPU / iGPU / NPU 打的是同一條 DRAM 匯流排，差異只在利用率 util——這是 v5 對 v4 reuse 體系的修正：共享記憶體平台上 NPU 不會因「重複利用」而超越頻寬上限。</p>
       </div>
       <div class="theory">
@@ -373,8 +374,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
           <tbody>
             <tr><td class="k">iGPU</td><td class="num">0.36–0.87</td></tr>
             <tr><td class="k">NPU</td><td class="num">0.31–0.67</td></tr>
-            <tr><td class="k">CPU</td><td class="num">0.50 / 0.65 (AVX2/512)</td></tr>
-            <tr><td class="k">dGPU</td><td class="num">0.70</td></tr>
+            <tr><td class="k">CPU</td><td class="num">0.50 / 0.65 (AVX2/512) · Xeon 0.40–0.55</td></tr>
+            <tr><td class="k">dGPU</td><td class="num">0.70 · 70W-class 0.60</td></tr>
           </tbody>
         </table>
       </div>
@@ -389,7 +390,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       </div>
       <div class="theory">
         <h3 data-i18n="th-dgpu">dGPU 模型</h3>
-        <code class="eq">TPS = VRAM_BW × 0.70 / model_bytes<br><span class="hi">if</span> model + KV &gt; VRAM → <span class="hi">warning</span></code>
+        <code class="eq">TPS = VRAM_BW × 0.60–0.70 / traffic<br><span class="hi">if</span> model + KV &gt; VRAM → <span class="hi">warning</span></code>
         <p data-i18n="tp-dgpu">dGPU decode 由 VRAM 頻寬主導。模型＋KV 塞不進 VRAM 時進入 offload 情境——該區誤差可達 2–3 倍，本工具只給警告不給數字。</p>
       </div>
       <div class="theory">
@@ -614,16 +615,16 @@ var PLATFORMS=[
  {id:'W3495X',name:'Xeon W9-3495X',fam:'XEON-W',bw:307.2,c:56},
  {id:'W2595X',name:'Xeon W7-2595X',fam:'XEON-W',bw:153.6,c:26},
  /* Jetson SoC modules — GPU path only; reference runtime = TensorRT-LLM/MLC (llama.cpp ≈ 50–70% of shown) */
- {id:'orinnano8',name:'Jetson Orin Nano 8GB',fam:'JET-ORIN',bw:102.4,c:6},
- {id:'orinnx16',name:'Jetson Orin NX 16GB',fam:'JET-ORIN',bw:102.4,c:8},
- {id:'agxorin32',name:'Jetson AGX Orin 32GB',fam:'JET-ORIN',bw:204.8,c:8},
- {id:'agxorin64',name:'Jetson AGX Orin 64GB',fam:'JET-ORIN',bw:204.8,c:12},
- {id:'thor',name:'Jetson AGX Thor 128GB',fam:'JET-THOR',bw:273,c:14}
+ {id:'orinnano8',name:'Jetson Orin Nano 8GB',fam:'JET-ORIN',bw:102.4,c:6,mem:8},
+ {id:'orinnx16',name:'Jetson Orin NX 16GB',fam:'JET-ORIN',bw:102.4,c:8,mem:16},
+ {id:'agxorin32',name:'Jetson AGX Orin 32GB',fam:'JET-ORIN',bw:204.8,c:8,mem:32},
+ {id:'agxorin64',name:'Jetson AGX Orin 64GB',fam:'JET-ORIN',bw:204.8,c:12,mem:64},
+ {id:'thor',name:'Jetson AGX Thor 128GB',fam:'JET-THOR',bw:273,c:14,mem:128}
 ];
 function resolvePlat(e){
   var f=FAMILIES[e.fam];
   return {id:e.id,name:e.name,tag:e.fam,label:f.label,cat:f.cat,bw:e.bw,c:e.c,simd:f.simd,
-    uI:f.uI,uN:f.uN,fI:f.fI,fN:f.fN,npu:f.npu,conf:f.conf,uC:f.uC||0,noCpu:!!f.noCpu};
+    uI:f.uI,uN:f.uN,fI:f.fI,fN:f.fN,npu:f.npu,conf:f.conf,uC:f.uC||0,noCpu:!!f.noCpu,mem:e.mem||0};
 }
 
 /* cat: con=consumer, pro=industrial/workstation, amd=AMD. u overrides DGPU_UTIL (power-capped cards ≈ 0.60) */
@@ -703,7 +704,8 @@ var ZH={
  'pd-BW':'系統記憶體頻寬（dGPU 為 VRAM 頻寬）','pd-util':'裝置頻寬利用率（校準常數，依平台家族與裝置）',
  'pd-sizef':'模型大小修正：<2.5B ×0.92 · 2.5–6B ×1.0 · >6B ×1.12','pd-L':'上下文長度（tokens）',
  'pd-kv':'每 token KV cache 大小（GQA/MLA 架構決定，模型 preset 帶入）',
- 'pd-tps':'decode 速度 = BW × util × sizeF / model_bytes',
+ 'pd-tps':'decode 速度 = BW × util × sizeF / (active 權重 + KV 讀取)',
+ 'pd-tpc':'CPU compute 路徑：每核心頻寬供給 12（AVX2）／45（AVX-512）GB/s；C_req = BW ÷ tpc，低於即 compute-bound',
  'pd-ftl':'首字延遲 = ftl_coeff × P × (L/1024)，CPU 用 2PL/FLOPS',
  'pd-ram':'P×Q×1.05 + KV(L) + 2 GB 執行時開銷',
  'th-core':'核心公式','tp-core':'Decode 對所有裝置都是記憶體頻寬瓶頸：每產生一個 token，全部活躍權重都要從記憶體讀一次。CPU / iGPU / NPU 打的是同一條 DRAM 匯流排，差異只在利用率 util——這是 v5 對 v4 reuse 體系的修正：共享記憶體平台上 NPU 不會因「重複利用」而超越頻寬上限。',
@@ -728,6 +730,7 @@ var ZH={
  'ftl-lbl':'首字延遲','ram-model':'模型','ram-kv':'KV cache','ram-total':'RAM 需求','vram-total':'VRAM 需求',
  'w-ftl-npu':'注意：此世代 NPU 首字延遲明顯偏高，互動情境建議用 iGPU',
  'w-tps-low':'所有裝置 TPS < 5：模型過大或頻寬不足，建議縮小模型/量化或升級平台',
+ 'w-mem-soc':function(need,cap){return '模組記憶體不足：需 '+need+' GB > '+cap+' GB（固定記憶體不可擴充），請縮小模型或量化';},
  'cmp-metric':'指標','cmp-none':'（不對比）',
  'adeq-ok':function(C,req){return 'Core 充足（'+C+' ≥ '+req+'）：再加 core 無法提升 CPU TPS，BW 是上限。';},
  'adeq-low':function(C,req){return 'Core 不足（'+C+' < '+req+'）：CPU TPS 受 compute 限制，加 core 直接提升速度。';},
@@ -760,7 +763,8 @@ var EN={
  'pd-BW':'System memory bandwidth (VRAM BW for dGPU)','pd-util':'Device bandwidth utilization (calibrated constant per family & device)',
  'pd-sizef':'Size factor: <2.5B ×0.92 · 2.5–6B ×1.0 · >6B ×1.12','pd-L':'Context length (tokens)',
  'pd-kv':'KV cache per token (set by model architecture: GQA/MLA)',
- 'pd-tps':'Decode rate = BW × util × sizeF / model_bytes',
+ 'pd-tps':'Decode rate = BW × util × sizeF / (active weights + KV read)',
+ 'pd-tpc':'CPU compute path: per-core bandwidth feed 12 (AVX2) / 45 (AVX-512) GB/s; C_req = BW ÷ tpc — below it the CPU is compute-bound',
  'pd-ftl':'First-token latency = ftl_coeff × P × (L/1024); CPU uses 2PL/FLOPS',
  'pd-ram':'P×Q×1.05 + KV(L) + 2 GB runtime overhead',
  'th-core':'Core Formula','tp-core':'Decode is memory-bandwidth-bound on every device: all active weights must be read once per generated token. CPU / iGPU / NPU share the same DRAM bus — the only difference is utilization. This is v5’s correction of the v4 reuse system: on shared-memory platforms an NPU cannot exceed the bandwidth ceiling via “reuse”.',
@@ -785,6 +789,7 @@ var EN={
  'ftl-lbl':'First token','ram-model':'Model','ram-kv':'KV cache','ram-total':'RAM needed','vram-total':'VRAM needed',
  'w-ftl-npu':'Note: NPU first-token latency is high on this generation; prefer iGPU for interactive use',
  'w-tps-low':'All devices < 5 TPS: model too large or bandwidth too low — shrink model/quant or upgrade platform',
+ 'w-mem-soc':function(need,cap){return 'Module memory insufficient: needs '+need+' GB > '+cap+' GB (fixed, not expandable) — use a smaller model or quantization';},
  'cmp-metric':'Metric','cmp-none':'(no comparison)',
  'adeq-ok':function(C,req){return 'Cores sufficient ('+C+' ≥ '+req+'): more cores won’t raise CPU TPS; BW is the ceiling.';},
  'adeq-low':function(C,req){return 'Cores insufficient ('+C+' < '+req+'): CPU TPS is compute-limited; adding cores helps directly.';},
@@ -982,7 +987,7 @@ function engine(plat,P,AP,bpw,L,kvMB,gpu,simdV){
   var mBytes=P*bpw*1.05;               // GB, full weights (RAM)
   var aBytes=AP*bpw*1.05;              // GB, active weights per token (traffic)
   var kvTot=kvMB*L/1024;               // GB
-  var trafGB=aBytes+kvTot*0.05;        // amortized KV read; weights dominate
+  var trafGB=aBytes+kvTot;             // per-token traffic: active weights + full KV read at length L
   var ram=mBytes+kvTot+2;
   var sf=sizeF(AP);
   var out={ram:ram,kv:kvTot,mBytes:mBytes,devices:{cpu:null,igpu:null,npu:null,dgpu:null}};
@@ -1051,10 +1056,12 @@ function renderCards(elId,res){
   ['cpu','igpu','npu','dgpu'].forEach(function(d){html+=devCardHTML(d,res.devices[d]);});
   document.getElementById(elId).innerHTML=html;
 }
-function renderRam(elId,res,gpu){
+function renderRam(elId,res,gpu,plat){
+  var memCap=plat&&plat.mem?plat.mem:0;
+  var ramOver=memCap&&res.ram>memCap;
   var h='<div class="ram-item"><span class="ram-lbl">'+t('ram-model')+'</span><span class="ram-val" style="color:var(--text)">'+res.mBytes.toFixed(1)+' GB</span></div>'+
         '<div class="ram-item"><span class="ram-lbl">'+t('ram-kv')+'</span><span class="ram-val" style="color:var(--text)">'+res.kv.toFixed(1)+' GB</span></div>'+
-        '<div class="ram-item"><span class="ram-lbl">'+t('ram-total')+'</span><span class="ram-val">'+Math.ceil(res.ram)+' GB</span></div>';
+        '<div class="ram-item"><span class="ram-lbl">'+t('ram-total')+'</span><span class="ram-val'+(ramOver?' warn':'')+'">'+Math.ceil(res.ram)+(memCap?' / '+memCap:'')+' GB</span></div>';
   if(gpu&&res.devices.dgpu){
     var d=res.devices.dgpu;
     h+='<div class="ram-item"><span class="ram-lbl">'+t('vram-total')+'</span><span class="ram-val'+(d.fail?' warn':'')+'">'+d.vneed.toFixed(1)+' / '+d.vram+' GB</span></div>';
@@ -1091,16 +1098,17 @@ function calc(){
   lastResult={plat:plat,model:m,P:P,AP:AP,q:q,L:curL,gpu:gpu,res:res};
 
   /* hints */
-  document.getElementById('platHint').textContent=(plat.label?plat.label+' — ':'')+plat.name+' · '+plat.bw.toFixed(1)+' GB/s · '+plat.c+'C · '+(simdUse||'avx2').toUpperCase();
+  document.getElementById('platHint').textContent=(plat.label?plat.label+' — ':'')+plat.name+' · '+plat.bw.toFixed(1)+' GB/s · '+plat.c+'C · '+(plat.noCpu?'ARM':(simdUse||'avx2').toUpperCase())+(plat.mem?' · '+plat.mem+' GB':'');
   document.getElementById('modelHint').textContent=P+'B'+(AP!==P?' (Active '+AP+'B)':'')+' × '+q.bpw+' B/param ≈ '+res.mBytes.toFixed(1)+' GB · KV@'+(curL>=1024?(curL/1024)+'k':curL)+' ≈ '+res.kv.toFixed(1)+' GB';
 
   /* wizard */
   renderCards('wizCards',res);
-  renderRam('ramBar',res,gpu);
+  renderRam('ramBar',res,gpu,plat);
   var warns=[];
   var allLow=true;
   ['cpu','igpu','npu','dgpu'].forEach(function(d){var r=res.devices[d];if(r&&!r.fail&&r.tps>=5)allLow=false;});
   if(allLow)warns.push(t('w-tps-low'));
+  if(plat.mem&&res.ram>plat.mem)warns.push(t('w-mem-soc')(Math.ceil(res.ram),plat.mem));
   if(res.devices.npu&&res.devices.npu.mat==='exp'&&res.devices.npu.ftl>3)warns.push(t('w-ftl-npu'));
   document.getElementById('wizWarn').textContent=warns.join('   ·   ');
 
@@ -1126,7 +1134,7 @@ function calc(){
 
   /* advanced */
   renderCards('advCards',res);
-  renderRam('ramBarAdv',res,gpu);
+  renderRam('ramBarAdv',res,gpu,plat);
   var cpu=res.devices.cpu;
   if(cpu){
     var C=plat.c, Creq=cpu.cReq;
