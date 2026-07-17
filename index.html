@@ -180,7 +180,11 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <div class="wiz-card">
       <div class="wiz-title"><span class="wiz-num">1</span><span data-i18n="wz-s1">選機器</span></div>
       <div class="wiz-row">
-        <span class="wiz-lbl" data-i18n="wz-platform">平台</span>
+        <span class="wiz-lbl" data-i18n="wz-gen">世代</span>
+        <select id="selGen" onchange="onGen()"></select>
+      </div>
+      <div class="wiz-row">
+        <span class="wiz-lbl" data-i18n="wz-sku">型號</span>
         <select id="selPlat" onchange="onPlat()"></select>
       </div>
       <div id="customRow" style="display:none">
@@ -432,41 +436,182 @@ var QUANTS=[
   {id:'FP16', label:'FP16',si:'16b',bpw:2.00}
 ];
 
-/* util / ftl are calibrated bare constants per family (iGPU / NPU); ftl in ms per B-param at 1k input */
+/* Families: calibrated bare constants per generation (iGPU / NPU util; ftl ms per B-param @1k input).
+   cat: mob=mobile, dt=desktop, ent=entry/embedded, srv=server. uC overrides CPU util where set. */
+var FAMILIES={
+ 'PTL-H'  :{label:'Core Ultra 300H · Panther Lake-H',   cat:'mob', uI:.75,uN:.67,fI:45,  fN:190, npu:'ok',  conf:'cal', simd:'avx2'},
+ 'PTL'    :{label:'Core Ultra 300 · Panther Lake',      cat:'mob', uI:.75,uN:.67,fI:50,  fN:190, npu:'ok',  conf:'cal', simd:'avx2'},
+ 'LNL'    :{label:'Core Ultra 200V · Lunar Lake',       cat:'mob', uI:.70,uN:.60,fI:150, fN:300, npu:'ok',  conf:'est', simd:'avx2'},
+ 'ARL-H'  :{label:'Core Ultra 200H · Arrow Lake-H',     cat:'mob', uI:.67,uN:.38,fI:65,  fN:650, npu:'exp', conf:'cal', simd:'avx2'},
+ 'ARL-HX' :{label:'Core Ultra 200HX · Arrow Lake-HX',   cat:'mob', uI:.50,uN:.38,fI:600, fN:700, npu:'exp', conf:'est', simd:'avx2'},
+ 'ARL-U'  :{label:'Core Ultra 200U · Arrow Lake-U',     cat:'mob', uI:.44,uN:.31,fI:350, fN:800, npu:'exp', conf:'cal', simd:'avx2'},
+ 'ARL-S'  :{label:'Core Ultra 200S · Arrow Lake-S',     cat:'dt',  uI:.51,uN:.40,fI:590, fN:700, npu:'exp', conf:'cal', simd:'avx2'},
+ 'MTL-H'  :{label:'Core Ultra 100H · Meteor Lake-H',    cat:'mob', uI:.61,uN:.42,fI:290, fN:650, npu:'exp', conf:'cal', simd:'avx2'},
+ 'MTL-U'  :{label:'Core Ultra 100U · Meteor Lake-U',    cat:'mob', uI:.50,uN:.35,fI:400, fN:800, npu:'exp', conf:'cal', simd:'avx2'},
+ 'RPL-200H':{label:'Core 200H · Raptor Lake Refresh-H', cat:'mob', uI:.64,uN:0,  fI:630, fN:0,   npu:null,  conf:'cal', simd:'avx2'},
+ 'RPL-200U':{label:'Core 200U · Raptor Lake Refresh-U', cat:'mob', uI:.60,uN:0,  fI:700, fN:0,   npu:null,  conf:'cal', simd:'avx2'},
+ 'WCL'    :{label:'Core 300 · Wildcat Lake',            cat:'ent', uI:.87,uN:.32,fI:900, fN:650, npu:'exp', conf:'cal', simd:'avx2'},
+ 'BTL-S'  :{label:'Core 200S Embedded · Bartlett Lake-S',cat:'ent',uI:.36,uN:0,  fI:1500,fN:0,   npu:null,  conf:'cal', simd:'avx2'},
+ 'RPL-S14':{label:'14th Gen Core-S · Raptor Lake-R',    cat:'dt',  uI:.36,uN:0,  fI:1500,fN:0,   npu:null,  conf:'cal', simd:'avx2'},
+ 'RPL-S13':{label:'13th Gen Core-S · Raptor Lake-S',    cat:'dt',  uI:.36,uN:0,  fI:1500,fN:0,   npu:null,  conf:'cal', simd:'avx2'},
+ 'RPL-HX' :{label:'13/14th Gen HX · Raptor Lake-HX',    cat:'mob', uI:.36,uN:0,  fI:1500,fN:0,   npu:null,  conf:'est', simd:'avx2'},
+ 'RPL-H13':{label:'13th Gen Core-H · Raptor Lake-H',    cat:'mob', uI:.62,uN:0,  fI:700, fN:0,   npu:null,  conf:'est', simd:'avx2'},
+ 'RPL-U13':{label:'13th Gen Core-U · Raptor Lake-U',    cat:'mob', uI:.58,uN:0,  fI:800, fN:0,   npu:null,  conf:'est', simd:'avx2'},
+ 'ADL-S'  :{label:'12th Gen Core-S · Alder Lake-S',     cat:'dt',  uI:.36,uN:0,  fI:1600,fN:0,   npu:null,  conf:'cal', simd:'avx2'},
+ 'ADL-H'  :{label:'12th Gen Core-H · Alder Lake-H',     cat:'mob', uI:.58,uN:0,  fI:800, fN:0,   npu:null,  conf:'est', simd:'avx2'},
+ 'ADL-PU' :{label:'12th Gen Core-P/U · Alder Lake-P/U', cat:'mob', uI:.55,uN:0,  fI:850, fN:0,   npu:null,  conf:'est', simd:'avx2'},
+ 'TWL'    :{label:'Core 3 N · Twin Lake',               cat:'ent', uI:.55,uN:0,  fI:2000,fN:0,   npu:null,  conf:'cal', simd:'avx2'},
+ 'ADL-N'  :{label:'Processor N · Alder Lake-N',         cat:'ent', uI:.50,uN:0,  fI:2400,fN:0,   npu:null,  conf:'est', simd:'avx2'},
+ 'XEON6P' :{label:'Xeon 6 P-core · Granite Rapids',     cat:'srv', uI:0,  uN:0,  fI:0,   fN:0,   npu:null,  conf:'est', simd:'avx512', uC:.45},
+ 'XEON6E' :{label:'Xeon 6 E-core · Sierra Forest',      cat:'srv', uI:0,  uN:0,  fI:0,   fN:0,   npu:null,  conf:'est', simd:'avx2',   uC:.40},
+ 'EMR'    :{label:'Xeon 5th Gen · Emerald Rapids',      cat:'srv', uI:0,  uN:0,  fI:0,   fN:0,   npu:null,  conf:'est', simd:'avx512', uC:.50},
+ 'SPR'    :{label:'Xeon 4th Gen · Sapphire Rapids',     cat:'srv', uI:0,  uN:0,  fI:0,   fN:0,   npu:null,  conf:'est', simd:'avx512', uC:.50},
+ 'XEON-W' :{label:'Xeon W · Workstation',               cat:'srv', uI:0,  uN:0,  fI:0,   fN:0,   npu:null,  conf:'est', simd:'avx512', uC:.55}
+};
+
+/* SKUs: {id, name, fam, bw (typical config GB/s), c (cores)} — same-spec variants (F/KF/T) map to the listed SKU */
 var PLATFORMS=[
- {id:'388H', name:'Core Ultra X9 388H', tag:'PTL-H', bw:119.5, c:16, simd:'avx2', uI:.75, uN:.67, fI:45,  fN:190, npu:'ok',  conf:'cal'},
- {id:'358H', name:'Core Ultra X7 358H', tag:'PTL-H', bw:136.5, c:16, simd:'avx2', uI:.75, uN:.67, fI:45,  fN:190, npu:'ok',  conf:'cal'},
- {id:'366H', name:'Core Ultra 7 366H',  tag:'PTL-H', bw:102.4, c:16, simd:'avx2', uI:.75, uN:.67, fI:45,  fN:190, npu:'ok',  conf:'cal'},
- {id:'338H', name:'Core Ultra 5 338H',  tag:'PTL-H', bw:102.4, c:12, simd:'avx2', uI:.75, uN:.67, fI:45,  fN:190, npu:'ok',  conf:'cal'},
- {id:'336H', name:'Core Ultra 5 336H',  tag:'PTL-H', bw:102.4, c:12, simd:'avx2', uI:.75, uN:.67, fI:50,  fN:190, npu:'ok',  conf:'cal'},
- {id:'365',  name:'Core Ultra 7 365',   tag:'PTL',   bw:102.4, c:8,  simd:'avx2', uI:.75, uN:.67, fI:50,  fN:190, npu:'ok',  conf:'cal'},
- {id:'335',  name:'Core Ultra 5 335',   tag:'PTL',   bw:102.4, c:8,  simd:'avx2', uI:.75, uN:.67, fI:50,  fN:190, npu:'ok',  conf:'cal'},
- {id:'258V', name:'Core Ultra 7 258V',  tag:'LNL',   bw:136.5, c:8,  simd:'avx2', uI:.70, uN:.60, fI:150, fN:300, npu:'ok',  conf:'est'},
- {id:'226V', name:'Core Ultra 5 226V',  tag:'LNL',   bw:136.5, c:8,  simd:'avx2', uI:.70, uN:.60, fI:160, fN:320, npu:'ok',  conf:'est'},
- {id:'285H', name:'Core Ultra 9 285H',  tag:'ARL-H', bw:102.4, c:16, simd:'avx2', uI:.67, uN:.38, fI:65,  fN:650, npu:'exp', conf:'cal'},
- {id:'265H', name:'Core Ultra 7 265H',  tag:'ARL-H', bw:102.4, c:16, simd:'avx2', uI:.67, uN:.38, fI:65,  fN:650, npu:'exp', conf:'cal'},
- {id:'235H', name:'Core Ultra 5 235H',  tag:'ARL-H', bw:89.6,  c:14, simd:'avx2', uI:.67, uN:.38, fI:70,  fN:650, npu:'exp', conf:'cal'},
- {id:'265U', name:'Core Ultra 7 265U',  tag:'ARL-U', bw:102.4, c:12, simd:'avx2', uI:.44, uN:.31, fI:350, fN:800, npu:'exp', conf:'cal'},
- {id:'225U', name:'Core Ultra 5 225U',  tag:'ARL-U', bw:89.6,  c:12, simd:'avx2', uI:.44, uN:.31, fI:350, fN:800, npu:'exp', conf:'cal'},
- {id:'285K', name:'Core Ultra 9 285K',  tag:'ARL-S', bw:102.4, c:24, simd:'avx2', uI:.51, uN:.40, fI:590, fN:700, npu:'exp', conf:'cal'},
- {id:'265S', name:'Core Ultra 7 265',   tag:'ARL-S', bw:102.4, c:20, simd:'avx2', uI:.51, uN:.40, fI:590, fN:700, npu:'exp', conf:'cal'},
- {id:'245S', name:'Core Ultra 5 245',   tag:'ARL-S', bw:102.4, c:14, simd:'avx2', uI:.51, uN:.40, fI:590, fN:700, npu:'exp', conf:'cal'},
- {id:'185H', name:'Core Ultra 9 185H',  tag:'MTL-H', bw:119.5, c:16, simd:'avx2', uI:.61, uN:.42, fI:290, fN:650, npu:'exp', conf:'cal'},
- {id:'165H', name:'Core Ultra 7 165H',  tag:'MTL-H', bw:76.8,  c:16, simd:'avx2', uI:.61, uN:.42, fI:290, fN:650, npu:'exp', conf:'cal'},
- {id:'125H', name:'Core Ultra 5 125H',  tag:'MTL-H', bw:76.8,  c:14, simd:'avx2', uI:.61, uN:.42, fI:300, fN:650, npu:'exp', conf:'cal'},
- {id:'165U', name:'Core Ultra 7 165U',  tag:'MTL-U', bw:76.8,  c:12, simd:'avx2', uI:.50, uN:.35, fI:400, fN:800, npu:'exp', conf:'cal'},
- {id:'125U', name:'Core Ultra 5 125U',  tag:'MTL-U', bw:76.8,  c:12, simd:'avx2', uI:.50, uN:.35, fI:400, fN:800, npu:'exp', conf:'cal'},
- {id:'350',  name:'Core 7 350',         tag:'WCL',   bw:51.2,  c:6,  simd:'avx2', uI:.87, uN:.32, fI:900, fN:650, npu:'exp', conf:'cal'},
- {id:'250H', name:'Core 7 250H',        tag:'RPL-H', bw:89.6,  c:14, simd:'avx2', uI:.64, uN:0,   fI:630, fN:0,   npu:null,  conf:'cal'},
- {id:'220H', name:'Core 5 220H',        tag:'RPL-H', bw:76.8,  c:12, simd:'avx2', uI:.64, uN:0,   fI:650, fN:0,   npu:null,  conf:'cal'},
- {id:'250U', name:'Core 7 250U',        tag:'RPL-U', bw:76.8,  c:10, simd:'avx2', uI:.60, uN:0,   fI:700, fN:0,   npu:null,  conf:'cal'},
- {id:'251E', name:'Core 7 251E',        tag:'BTL-S', bw:76.8,  c:24, simd:'avx2', uI:.36, uN:0,   fI:1500,fN:0,   npu:null,  conf:'cal'},
- {id:'221E', name:'Core 5 221E',        tag:'BTL-S', bw:76.8,  c:14, simd:'avx2', uI:.36, uN:0,   fI:1500,fN:0,   npu:null,  conf:'cal'},
- {id:'N355', name:'Core 3 N355',        tag:'TWL',   bw:38.4,  c:8,  simd:'avx2', uI:.55, uN:0,   fI:2000,fN:0,   npu:null,  conf:'cal'},
- {id:'N250', name:'Processor N250',     tag:'TWL',   bw:38.4,  c:4,  simd:'avx2', uI:.55, uN:0,   fI:2400,fN:0,   npu:null,  conf:'cal'},
- {id:'X6960P',name:'Xeon 6 960P',       tag:'GNR',   bw:409.6, c:72, simd:'avx512',uI:0,  uN:0,   fI:0,   fN:0,   npu:null,  conf:'est'},
- {id:'W3595X',name:'Xeon W9-3595X',     tag:'SPR-W', bw:307.2, c:60, simd:'avx512',uI:0,  uN:0,   fI:0,   fN:0,   npu:null,  conf:'est'}
+ /* Panther Lake */
+ {id:'388H',name:'Core Ultra X9 388H',fam:'PTL-H',bw:119.5,c:16},
+ {id:'358H',name:'Core Ultra X7 358H',fam:'PTL-H',bw:136.5,c:16},
+ {id:'366H',name:'Core Ultra 7 366H',fam:'PTL-H',bw:102.4,c:16},
+ {id:'338H',name:'Core Ultra 5 338H',fam:'PTL-H',bw:102.4,c:12},
+ {id:'336H',name:'Core Ultra 5 336H',fam:'PTL-H',bw:102.4,c:12},
+ {id:'365',name:'Core Ultra 7 365',fam:'PTL',bw:102.4,c:8},
+ {id:'335',name:'Core Ultra 5 335',fam:'PTL',bw:102.4,c:8},
+ /* Lunar Lake */
+ {id:'288V',name:'Core Ultra 9 288V',fam:'LNL',bw:136.5,c:8},
+ {id:'268V',name:'Core Ultra 7 268V',fam:'LNL',bw:136.5,c:8},
+ {id:'258V',name:'Core Ultra 7 258V',fam:'LNL',bw:136.5,c:8},
+ {id:'256V',name:'Core Ultra 7 256V',fam:'LNL',bw:136.5,c:8},
+ {id:'228V',name:'Core Ultra 5 228V',fam:'LNL',bw:136.5,c:8},
+ {id:'226V',name:'Core Ultra 5 226V',fam:'LNL',bw:136.5,c:8},
+ /* Arrow Lake mobile */
+ {id:'285H',name:'Core Ultra 9 285H',fam:'ARL-H',bw:102.4,c:16},
+ {id:'265H',name:'Core Ultra 7 265H',fam:'ARL-H',bw:102.4,c:16},
+ {id:'255H',name:'Core Ultra 7 255H',fam:'ARL-H',bw:102.4,c:16},
+ {id:'235H',name:'Core Ultra 5 235H',fam:'ARL-H',bw:89.6,c:14},
+ {id:'225H',name:'Core Ultra 5 225H',fam:'ARL-H',bw:89.6,c:14},
+ {id:'285HX',name:'Core Ultra 9 285HX',fam:'ARL-HX',bw:102.4,c:24},
+ {id:'275HX',name:'Core Ultra 9 275HX',fam:'ARL-HX',bw:102.4,c:24},
+ {id:'265HX',name:'Core Ultra 7 265HX',fam:'ARL-HX',bw:102.4,c:20},
+ {id:'255HX',name:'Core Ultra 7 255HX',fam:'ARL-HX',bw:102.4,c:20},
+ {id:'265U',name:'Core Ultra 7 265U',fam:'ARL-U',bw:102.4,c:12},
+ {id:'255U',name:'Core Ultra 7 255U',fam:'ARL-U',bw:102.4,c:12},
+ {id:'235U',name:'Core Ultra 5 235U',fam:'ARL-U',bw:89.6,c:12},
+ {id:'225U',name:'Core Ultra 5 225U',fam:'ARL-U',bw:89.6,c:12},
+ /* Arrow Lake desktop */
+ {id:'285K',name:'Core Ultra 9 285K',fam:'ARL-S',bw:102.4,c:24},
+ {id:'265K',name:'Core Ultra 7 265K',fam:'ARL-S',bw:102.4,c:20},
+ {id:'265S',name:'Core Ultra 7 265',fam:'ARL-S',bw:102.4,c:20},
+ {id:'245K',name:'Core Ultra 5 245K',fam:'ARL-S',bw:102.4,c:14},
+ {id:'245S',name:'Core Ultra 5 245',fam:'ARL-S',bw:102.4,c:14},
+ {id:'235S',name:'Core Ultra 5 235',fam:'ARL-S',bw:102.4,c:14},
+ {id:'225S',name:'Core Ultra 5 225',fam:'ARL-S',bw:102.4,c:10},
+ /* Meteor Lake */
+ {id:'185H',name:'Core Ultra 9 185H',fam:'MTL-H',bw:119.5,c:16},
+ {id:'165H',name:'Core Ultra 7 165H',fam:'MTL-H',bw:76.8,c:16},
+ {id:'155H',name:'Core Ultra 7 155H',fam:'MTL-H',bw:76.8,c:16},
+ {id:'135H',name:'Core Ultra 5 135H',fam:'MTL-H',bw:76.8,c:14},
+ {id:'125H',name:'Core Ultra 5 125H',fam:'MTL-H',bw:76.8,c:14},
+ {id:'165U',name:'Core Ultra 7 165U',fam:'MTL-U',bw:76.8,c:12},
+ {id:'155U',name:'Core Ultra 7 155U',fam:'MTL-U',bw:76.8,c:12},
+ {id:'135U',name:'Core Ultra 5 135U',fam:'MTL-U',bw:76.8,c:12},
+ {id:'125U',name:'Core Ultra 5 125U',fam:'MTL-U',bw:76.8,c:12},
+ /* Raptor Lake Refresh 200 series */
+ {id:'250H',name:'Core 7 250H',fam:'RPL-200H',bw:89.6,c:14},
+ {id:'220H',name:'Core 5 220H',fam:'RPL-200H',bw:76.8,c:12},
+ {id:'250U',name:'Core 7 250U',fam:'RPL-200U',bw:76.8,c:10},
+ {id:'220U',name:'Core 5 220U',fam:'RPL-200U',bw:76.8,c:10},
+ /* Wildcat Lake */
+ {id:'350',name:'Core 7 350',fam:'WCL',bw:51.2,c:6},
+ /* Bartlett Lake-S */
+ {id:'251E',name:'Core 7 251E',fam:'BTL-S',bw:76.8,c:24},
+ {id:'221E',name:'Core 5 221E',fam:'BTL-S',bw:76.8,c:14},
+ {id:'273PE',name:'Core 9 273PE',fam:'BTL-S',bw:76.8,c:12},
+ /* 14th Gen desktop */
+ {id:'14900K',name:'i9-14900K',fam:'RPL-S14',bw:89.6,c:24},
+ {id:'14700K',name:'i7-14700K',fam:'RPL-S14',bw:89.6,c:20},
+ {id:'14600K',name:'i5-14600K',fam:'RPL-S14',bw:89.6,c:14},
+ {id:'14500',name:'i5-14500',fam:'RPL-S14',bw:89.6,c:14},
+ {id:'14400',name:'i5-14400',fam:'RPL-S14',bw:89.6,c:10},
+ {id:'14100',name:'i3-14100',fam:'RPL-S14',bw:89.6,c:4},
+ /* 13th Gen desktop */
+ {id:'13900K',name:'i9-13900K',fam:'RPL-S13',bw:89.6,c:24},
+ {id:'13700K',name:'i7-13700K',fam:'RPL-S13',bw:89.6,c:16},
+ {id:'13600K',name:'i5-13600K',fam:'RPL-S13',bw:89.6,c:14},
+ {id:'13500',name:'i5-13500',fam:'RPL-S13',bw:89.6,c:14},
+ {id:'13400',name:'i5-13400',fam:'RPL-S13',bw:89.6,c:10},
+ {id:'13100',name:'i3-13100',fam:'RPL-S13',bw:89.6,c:4},
+ /* 13/14th HX */
+ {id:'14900HX',name:'i9-14900HX',fam:'RPL-HX',bw:89.6,c:24},
+ {id:'13980HX',name:'i9-13980HX',fam:'RPL-HX',bw:89.6,c:24},
+ {id:'13900HX',name:'i9-13900HX',fam:'RPL-HX',bw:89.6,c:24},
+ {id:'13700HX',name:'i7-13700HX',fam:'RPL-HX',bw:89.6,c:16},
+ /* 13th Gen mobile H/U */
+ {id:'13900H',name:'i9-13900H',fam:'RPL-H13',bw:76.8,c:14},
+ {id:'13700H',name:'i7-13700H',fam:'RPL-H13',bw:76.8,c:14},
+ {id:'13620H',name:'i7-13620H',fam:'RPL-H13',bw:76.8,c:10},
+ {id:'13500H',name:'i5-13500H',fam:'RPL-H13',bw:76.8,c:12},
+ {id:'13420H',name:'i5-13420H',fam:'RPL-H13',bw:76.8,c:8},
+ {id:'1355U',name:'i7-1355U',fam:'RPL-U13',bw:76.8,c:10},
+ {id:'1345U',name:'i5-1345U',fam:'RPL-U13',bw:76.8,c:10},
+ {id:'1335U',name:'i5-1335U',fam:'RPL-U13',bw:76.8,c:10},
+ {id:'1315U',name:'i3-1315U',fam:'RPL-U13',bw:76.8,c:6},
+ /* 12th Gen desktop */
+ {id:'12900K',name:'i9-12900K',fam:'ADL-S',bw:76.8,c:16},
+ {id:'12700K',name:'i7-12700K',fam:'ADL-S',bw:76.8,c:12},
+ {id:'12600K',name:'i5-12600K',fam:'ADL-S',bw:76.8,c:10},
+ {id:'12400',name:'i5-12400',fam:'ADL-S',bw:76.8,c:6},
+ {id:'12100',name:'i3-12100',fam:'ADL-S',bw:76.8,c:4},
+ /* 12th Gen mobile */
+ {id:'12900HK',name:'i9-12900HK',fam:'ADL-H',bw:76.8,c:14},
+ {id:'12700H',name:'i7-12700H',fam:'ADL-H',bw:76.8,c:14},
+ {id:'12500H',name:'i5-12500H',fam:'ADL-H',bw:76.8,c:12},
+ {id:'12450H',name:'i5-12450H',fam:'ADL-H',bw:76.8,c:8},
+ {id:'1280P',name:'i7-1280P',fam:'ADL-PU',bw:76.8,c:14},
+ {id:'1260P',name:'i7-1260P',fam:'ADL-PU',bw:76.8,c:12},
+ {id:'1240P',name:'i5-1240P',fam:'ADL-PU',bw:76.8,c:12},
+ {id:'1255U',name:'i7-1255U',fam:'ADL-PU',bw:76.8,c:10},
+ {id:'1235U',name:'i5-1235U',fam:'ADL-PU',bw:76.8,c:10},
+ /* Entry N-series */
+ {id:'N355',name:'Core 3 N355',fam:'TWL',bw:38.4,c:8},
+ {id:'N350',name:'Core 3 N350',fam:'TWL',bw:38.4,c:8},
+ {id:'N250',name:'Processor N250',fam:'TWL',bw:38.4,c:4},
+ {id:'N150',name:'Processor N150',fam:'TWL',bw:38.4,c:4},
+ {id:'N305',name:'Core i3-N305',fam:'ADL-N',bw:38.4,c:8},
+ {id:'N200',name:'Processor N200',fam:'ADL-N',bw:38.4,c:4},
+ {id:'N100',name:'Processor N100',fam:'ADL-N',bw:38.4,c:4},
+ {id:'N97',name:'Processor N97',fam:'ADL-N',bw:38.4,c:4},
+ /* Xeon 6 P-core (Granite Rapids) */
+ {id:'6980P',name:'Xeon 6980P',fam:'XEON6P',bw:614.4,c:128},
+ {id:'6960P',name:'Xeon 6960P',fam:'XEON6P',bw:614.4,c:72},
+ {id:'6952P',name:'Xeon 6952P',fam:'XEON6P',bw:614.4,c:96},
+ {id:'6767P',name:'Xeon 6767P',fam:'XEON6P',bw:409.6,c:64},
+ {id:'6747P',name:'Xeon 6747P',fam:'XEON6P',bw:409.6,c:48},
+ /* Xeon 6 E-core (Sierra Forest) */
+ {id:'6780E',name:'Xeon 6780E',fam:'XEON6E',bw:409.6,c:144},
+ {id:'6740E',name:'Xeon 6740E',fam:'XEON6E',bw:409.6,c:92},
+ {id:'6710E',name:'Xeon 6710E',fam:'XEON6E',bw:409.6,c:64},
+ /* Xeon 5th Gen (Emerald Rapids) */
+ {id:'8592P',name:'Xeon Platinum 8592+',fam:'EMR',bw:358.4,c:64},
+ {id:'8562YP',name:'Xeon Platinum 8562Y+',fam:'EMR',bw:358.4,c:32},
+ {id:'6548YP',name:'Xeon Gold 6548Y+',fam:'EMR',bw:358.4,c:32},
+ /* Xeon 4th Gen (Sapphire Rapids) */
+ {id:'8480P',name:'Xeon Platinum 8480+',fam:'SPR',bw:307.2,c:56},
+ {id:'8462YP',name:'Xeon Platinum 8462Y+',fam:'SPR',bw:307.2,c:32},
+ {id:'6430',name:'Xeon Gold 6430',fam:'SPR',bw:307.2,c:32},
+ {id:'5420P',name:'Xeon Gold 5420+',fam:'SPR',bw:307.2,c:28},
+ /* Xeon W */
+ {id:'W3595X',name:'Xeon W9-3595X',fam:'XEON-W',bw:307.2,c:60},
+ {id:'W3495X',name:'Xeon W9-3495X',fam:'XEON-W',bw:307.2,c:56},
+ {id:'W2595X',name:'Xeon W7-2595X',fam:'XEON-W',bw:153.6,c:26}
 ];
+function resolvePlat(e){
+  var f=FAMILIES[e.fam];
+  return {id:e.id,name:e.name,tag:e.fam,label:f.label,cat:f.cat,bw:e.bw,c:e.c,simd:f.simd,
+    uI:f.uI,uN:f.uN,fI:f.fI,fN:f.fN,npu:f.npu,conf:f.conf,uC:f.uC||0};
+}
 
 var GPUS=[
  {id:'rtx3060', name:'RTX 3060 12GB',    vram:12, vbw:360},
@@ -512,6 +657,8 @@ var ZH={
  'topbar-sub':'CPU · iGPU · NPU · dGPU 統一估算',
  'layer-wiz':'精靈','layer-adv':'進階','download-btn':'↓ 下載報告',
  'wz-s1':'選機器','wz-s2':'選模型','wz-platform':'平台','wz-model':'模型',
+ 'wz-gen':'世代','wz-sku':'型號',
+ 'cat-mob':'行動平台 Mobile','cat-dt':'桌上平台 Desktop','cat-ent':'入門／嵌入式 Entry','cat-srv':'伺服器 Server',
  'wz-igpu-u':'iGPU util','wz-npu-u':'NPU util',
  'q-label':'量化格式','l-label':'上下文長度 L',
  'cmp-title':'對比第二台',
@@ -564,6 +711,8 @@ var EN={
  'topbar-sub':'Unified CPU · iGPU · NPU · dGPU estimation',
  'layer-wiz':'Wizard','layer-adv':'Advanced','download-btn':'↓ Download Report',
  'wz-s1':'Pick a machine','wz-s2':'Pick a model','wz-platform':'Platform','wz-model':'Model',
+ 'wz-gen':'Generation','wz-sku':'SKU',
+ 'cat-mob':'Mobile','cat-dt':'Desktop','cat-ent':'Entry / Embedded','cat-srv':'Server',
  'wz-igpu-u':'iGPU util','wz-npu-u':'NPU util',
  'q-label':'Quantization','l-label':'Context Length L',
  'cmp-title':'Compare with',
@@ -627,7 +776,7 @@ function setLang(l){
 }
 
 /* ===================== STATE ===================== */
-var layer='wiz', curPlatId='388H', curPlat2Id='', curGpuId='', curModelId='q8b', curQ='INT4', curL=4096, simd='avx2', isMoE=false;
+var layer='wiz', curGenId='PTL-H', curPlatId='388H', curPlat2Id='', curGpuId='', curModelId='q8b', curQ='INT4', curL=4096, simd='avx2', isMoE=false;
 var lastResult=null;
 
 function setLayer(l){
@@ -641,26 +790,53 @@ function setLayer(l){
 }
 
 /* ===================== BUILD UI ===================== */
+var CATS=['mob','dt','ent','srv'];
+function famOrder(){var o=[];for(var k in FAMILIES)o.push(k);return o;}
 function buildSelects(){
-  var sp=document.getElementById('selPlat'), sp2=document.getElementById('selPlat2');
-  var groups={},order=[];
-  PLATFORMS.forEach(function(p){if(!groups[p.tag]){groups[p.tag]=[];order.push(p.tag);}groups[p.tag].push(p);});
-  function fill(sel,withNone){
-    sel.innerHTML='';
-    if(withNone){var o0=document.createElement('option');o0.value='';o0.textContent=t('cmp-none');sel.appendChild(o0);}
-    order.forEach(function(g){
-      var og=document.createElement('optgroup');og.label=g;
-      groups[g].forEach(function(p){
-        var o=document.createElement('option');o.value=p.id;
-        o.textContent=p.name+' · '+p.bw+' GB/s';
-        og.appendChild(o);
-      });
-      sel.appendChild(og);
+  /* generation select, grouped by category */
+  var sg2=document.getElementById('selGen');
+  sg2.innerHTML='';
+  CATS.forEach(function(cat){
+    var og=document.createElement('optgroup');og.label=t('cat-'+cat);
+    famOrder().forEach(function(fk){
+      if(FAMILIES[fk].cat!==cat)return;
+      var o=document.createElement('option');o.value=fk;o.textContent=FAMILIES[fk].label;
+      og.appendChild(o);
     });
-    if(!withNone){var oc=document.createElement('option');oc.value='custom';oc.textContent=t('opt-custom');sel.appendChild(oc);}
+    if(og.children.length)sg2.appendChild(og);
+  });
+  var ocg=document.createElement('option');ocg.value='custom';ocg.textContent=t('opt-custom');sg2.appendChild(ocg);
+  sg2.value=curGenId;
+
+  /* SKU select filtered by generation */
+  var sp=document.getElementById('selPlat');
+  sp.innerHTML='';
+  if(curGenId!=='custom'){
+    PLATFORMS.forEach(function(p){
+      if(p.fam!==curGenId)return;
+      var o=document.createElement('option');o.value=p.id;
+      o.textContent=p.name+' · '+p.bw+' GB/s · '+p.c+'C';
+      sp.appendChild(o);
+    });
+    sp.value=curPlatId;
+    if(sp.selectedIndex<0&&sp.options.length){sp.selectedIndex=0;curPlatId=sp.value;}
   }
-  fill(sp,false); fill(sp2,true);
-  sp.value=curPlatId; sp2.value=curPlat2Id;
+  sp.style.display=(curGenId==='custom')?'none':'';
+
+  /* compare select: flat, grouped by family label */
+  var sp2=document.getElementById('selPlat2');
+  sp2.innerHTML='';
+  var o0=document.createElement('option');o0.value='';o0.textContent=t('cmp-none');sp2.appendChild(o0);
+  famOrder().forEach(function(fk){
+    var og=document.createElement('optgroup');og.label=FAMILIES[fk].label;
+    PLATFORMS.forEach(function(p){
+      if(p.fam!==fk)return;
+      var o=document.createElement('option');o.value=p.id;o.textContent=p.name+' · '+p.bw+' GB/s';
+      og.appendChild(o);
+    });
+    if(og.children.length)sp2.appendChild(og);
+  });
+  sp2.value=curPlat2Id;
 
   var sg=document.getElementById('selGpu');sg.innerHTML='';
   var g0=document.createElement('option');g0.value='';g0.textContent=t('opt-none');sg.appendChild(g0);
@@ -693,8 +869,18 @@ function buildSelects(){
   });
 }
 
+function onGen(){
+  curGenId=document.getElementById('selGen').value;
+  if(curGenId!=='custom'){
+    /* pick first SKU of the generation */
+    for(var i=0;i<PLATFORMS.length;i++)if(PLATFORMS[i].fam===curGenId){curPlatId=PLATFORMS[i].id;break;}
+  } else curPlatId='custom';
+  buildSelects();
+  onPlat();
+}
 function onPlat(){
-  curPlatId=document.getElementById('selPlat').value;
+  if(curGenId!=='custom')curPlatId=document.getElementById('selPlat').value;
+  else curPlatId='custom';
   document.getElementById('customRow').style.display=(curPlatId==='custom')?'':'none';
   var p=getPlat();
   document.getElementById('sBW').value=p.bw;
@@ -742,10 +928,10 @@ function getPlat(){
       uN:un,
       fI:200,fN:400,npu:un>0?'exp':null,conf:'est'};
   }
-  for(var i=0;i<PLATFORMS.length;i++)if(PLATFORMS[i].id===curPlatId)return PLATFORMS[i];
-  return PLATFORMS[0];
+  for(var i=0;i<PLATFORMS.length;i++)if(PLATFORMS[i].id===curPlatId)return resolvePlat(PLATFORMS[i]);
+  return resolvePlat(PLATFORMS[0]);
 }
-function getPlatById(id){for(var i=0;i<PLATFORMS.length;i++)if(PLATFORMS[i].id===id)return PLATFORMS[i];return null;}
+function getPlatById(id){for(var i=0;i<PLATFORMS.length;i++)if(PLATFORMS[i].id===id)return resolvePlat(PLATFORMS[i]);return null;}
 function getModel(){for(var i=0;i<MODELS.length;i++)if(MODELS[i].id===curModelId)return MODELS[i];return MODELS[0];}
 function getQuant(){for(var i=0;i<QUANTS.length;i++)if(QUANTS[i].id===curQ)return QUANTS[i];return QUANTS[1];}
 function getGpu(){for(var i=0;i<GPUS.length;i++)if(GPUS[i].id===curGpuId)return GPUS[i];return null;}
@@ -762,7 +948,7 @@ function engine(plat,P,AP,bpw,L,kvMB,gpu,simdV){
   var out={ram:ram,kv:kvTot,mBytes:mBytes,devices:{cpu:null,igpu:null,npu:null,dgpu:null}};
 
   /* CPU */
-  var uC=UTIL_CPU[simdV];
+  var uC=plat.uC||UTIL_CPU[simdV];
   var tpsMemC=plat.bw*uC*sf/trafGB;
   var tpc=simdV==='avx512'?45:12;
   var eta=simdV==='avx512'?0.69:0.51;
@@ -863,7 +1049,7 @@ function calc(){
   lastResult={plat:plat,model:m,P:P,AP:AP,q:q,L:curL,gpu:gpu,res:res};
 
   /* hints */
-  document.getElementById('platHint').textContent=plat.name+' · '+plat.bw.toFixed(1)+' GB/s · '+plat.c+'C · '+(simdUse||'avx2').toUpperCase();
+  document.getElementById('platHint').textContent=(plat.label?plat.label+' — ':'')+plat.name+' · '+plat.bw.toFixed(1)+' GB/s · '+plat.c+'C · '+(simdUse||'avx2').toUpperCase();
   document.getElementById('modelHint').textContent=P+'B'+(AP!==P?' (Active '+AP+'B)':'')+' × '+q.bpw+' B/param ≈ '+res.mBytes.toFixed(1)+' GB · KV@'+(curL>=1024?(curL/1024)+'k':curL)+' ≈ '+res.kv.toFixed(1)+' GB';
 
   /* wizard */
@@ -939,7 +1125,11 @@ function writeURL(){
 function readURL(){
   try{
     var p=new URLSearchParams(location.search);
-    if(p.get('p'))curPlatId=p.get('p');
+    if(p.get('p')){
+      curPlatId=p.get('p');
+      if(curPlatId==='custom')curGenId='custom';
+      else for(var i=0;i<PLATFORMS.length;i++)if(PLATFORMS[i].id===curPlatId){curGenId=PLATFORMS[i].fam;break;}
+    }
     if(p.get('p2'))curPlat2Id=p.get('p2');
     if(p.get('g'))curGpuId=p.get('g');
     if(p.get('m'))curModelId=p.get('m');
@@ -1008,7 +1198,6 @@ readURL();
 try{var sl=localStorage.getItem('llmperf5.layer');if(sl)layer=sl;}catch(e){}
 applyStatic();
 buildSelects();
-document.getElementById('selPlat').value=curPlatId;
 document.getElementById('selGpu').value=curGpuId;
 document.getElementById('selModel').value=curModelId;
 document.getElementById('selPlat2').value=curPlat2Id;
